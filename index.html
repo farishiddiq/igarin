@@ -196,6 +196,23 @@ tr.tot td{font-weight:700;border-top:2px solid var(--ink);border-bottom:0}
 .sheet-hd h2{flex:1}
 .x{background:none;border:0;font-size:1.5rem;line-height:1;color:var(--ink-2);min-width:44px;min-height:44px}
 
+/* ---------- tab belanja: lega + font lebih kecil ---------- */
+.belanja .card{padding:18px}
+.belanja .card + .card,.belanja .card + .row,.belanja .row + .card{margin-top:14px}
+.belanja .money input{font-size:1.45rem;min-height:58px}
+.belanja .li{padding:14px 0;min-height:62px;gap:14px}
+.belanja .li .bd b{font-size:.9rem;font-weight:600}
+.belanja .li .bd span{font-size:.73rem;line-height:1.45;margin-top:3px;display:block}
+.belanja .li .amt{font-size:.9rem}
+.belanja .sec{margin:28px 0 12px}
+.belanja .sec h2{font-size:.98rem}
+.belanja .dsp{font-size:1.25rem !important}
+.belanja .tiny{line-height:1.5}
+.belanja .slide{padding:4px 16px 8px}
+.belanja .chip{font-size:.84rem;min-height:42px}
+.belanja input{font-size:.95rem}
+.belanja .card > .row{gap:12px}
+
 /* ---------- FAB bulat, zona jempol ---------- */
 .fab{position:fixed;right:20px;bottom:calc(78px + env(safe-area-inset-bottom));z-index:45;
   width:60px;height:60px;border-radius:50%;border:0;background:var(--saffron);color:#3B2B03;
@@ -241,6 +258,43 @@ tr.tot td{font-weight:700;border-top:2px solid var(--ink);border-bottom:0}
 .price b{font-family:"Bricolage Grotesque",sans-serif;font-size:2rem}
 .code-in{font-size:1.55rem;letter-spacing:.3em;text-align:center;font-family:"Bricolage Grotesque",sans-serif;font-weight:800}
 
+/* ---------- gerak ---------- */
+html{scroll-behavior:smooth}
+main,.land{-webkit-overflow-scrolling:touch}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes popIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+@keyframes scrimIn{from{opacity:0}to{opacity:1}}
+@keyframes tickPop{0%{transform:scale(.6)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+
+/* animasi hanya saat pindah layar — bukan tiap ketikan */
+.anim main > *{animation:fadeUp .34s cubic-bezier(.22,.8,.3,1) both}
+.anim main > *:nth-child(1){animation-delay:0s}
+.anim main > *:nth-child(2){animation-delay:.04s}
+.anim main > *:nth-child(3){animation-delay:.08s}
+.anim main > *:nth-child(4){animation-delay:.12s}
+.anim main > *:nth-child(n+5){animation-delay:.15s}
+.anim .land > *{animation:fadeUp .36s cubic-bezier(.22,.8,.3,1) both}
+.anim .kas{animation:popIn .4s cubic-bezier(.22,.8,.3,1) both}
+.anim .stag{animation:fadeUp .3s cubic-bezier(.22,.8,.3,1) both;animation-delay:calc(var(--i,0) * 38ms)}
+.anim .fab{animation:popIn .3s cubic-bezier(.34,1.4,.5,1) both;animation-delay:.12s}
+
+.scrim{animation:scrimIn .18s ease both}
+.sheet{animation:sheetUp .3s cubic-bezier(.22,.85,.3,1) both}
+.pay{transition:background .22s ease,border-color .22s ease,transform .12s ease}
+.pay:active{transform:scale(.985)}
+.pay.ok .tick{animation:tickPop .32s cubic-bezier(.34,1.5,.5,1) both}
+.tick{transition:background .22s ease,border-color .22s ease}
+.chip{transition:background .18s ease,color .18s ease,border-color .18s ease,transform .12s ease}
+.chip:active{transform:scale(.95)}
+.li{transition:background .18s ease}
+.li:active{background:var(--paper)}
+.btn{transition:transform .12s ease,filter .18s ease,background .18s ease}
+.toast{animation:fadeUp .24s cubic-bezier(.22,.8,.3,1) both}
+.nav button{transition:color .18s ease}
+.nav button svg{transition:transform .22s cubic-bezier(.34,1.4,.5,1)}
+.nav button.on svg{transform:translateY(-2px) scale(1.08)}
+
 @media print{
   .nav,.bar,.noprint{display:none !important}
   body{background:#fff}
@@ -248,7 +302,7 @@ tr.tot td{font-weight:700;border-top:2px solid var(--ink);border-bottom:0}
   .card{border:0;padding:0}
   .scroll-x{margin:0;padding:0}
 }
-@media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
+@media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important;scroll-behavior:auto !important}}
 </style>
 </head>
 <body>
@@ -256,7 +310,7 @@ tr.tot td{font-weight:700;border-top:2px solid var(--ink);border-bottom:0}
 <div id="layer"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
-const APP_VERSION = 'v2.1';   // naikkan tiap kali file diubah, supaya mudah cek versi mana yang live
+const APP_VERSION = 'v2.2';   // naikkan tiap kali file diubah, supaya mudah cek versi mana yang live
 const SUPABASE_URL = 'https://mlowsqxwvpejpxewdwrh.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_221A2i1lT8Gxkt49RIhoRQ_3RsyZ_QS';
 const EMAIL_DOMAIN = 'igarin.local';   // login rumah pakai username, bukan email asli
@@ -338,7 +392,7 @@ function normalize(bundle, username){
       kategori: hh.kategori || KAT_DEFAULT.slice(),
       iuranTypes: (bundle.iuran_types||[]).map(x=>({id:x.id, nama:x.nama_iuran, nominal:+x.nominal_default}))
     },
-    members: (bundle.members||[]).map(m=>({id:m.id, nama:m.nama, kamar:m.no_kamar, status:m.status, tglGabung:m.tanggal_gabung, tglKeluar:m.tanggal_keluar})),
+    members: (bundle.members||[]).map(m=>({id:m.id, nama:m.nama, kamar:m.no_kamar, status:m.status, tglGabung:m.tanggal_gabung, tglKeluar:m.tanggal_keluar, nominal: m.nominal_iuran==null? null : +m.nominal_iuran})),
     payments: (bundle.payments||[]).map(p=>({id:p.id, memberId:p.member_id, period:p.periode, nominal:+p.nominal, status:p.status_bayar, tanggal:p.tanggal_bayar, dicatatOleh:p.dicatat_oleh})),
     expenses: (bundle.expenses||[]).map(e=>({id:e.id, tanggal:e.tanggal, kategori:e.kategori, deskripsi:e.deskripsi, nominal:+e.nominal, besar:e.is_besar, dicatatOleh:e.dicatat_oleh, bukti:e.bukti_foto_url||''})),
     planned: (bundle.planned_expenses||[]).map(x=>({id:x.id, tanggalRencana:x.tanggal_rencana, deskripsi:x.deskripsi, estimasi:+x.estimasi_nominal, status:x.status})),
@@ -423,15 +477,32 @@ function aktif(h){ return memo('aktif', ()=> h.members.filter(m=>m.status==='akt
 /* Iuran dibagi rata otomatis: belanja periode itu / jumlah anggota aktif.
    Kalau periode belum ada belanja, pakai nominal tetap (kalau diisi) supaya
    iuran awal bulan tetap bisa ditagih di muka. */
-function tagihan(h, period){
+/* Bagi rata, tapi anggota yang punya iuran khusus dihitung duluan:
+     sisa = belanja − jumlah iuran khusus
+     share = ceil(sisa / jumlah anggota tanpa iuran khusus)
+   Anggota tanpa iuran khusus bayar share; yang punya bayar nominalnya sendiri. */
+function bagi(h, period){
   const p = period || thisPeriod();
-  return memo('tagihan:'+p, ()=>{
-    const n = aktif(h).length;
-    if(!n) return 0;
+  return memo('bagi:'+p, ()=>{
+    const ms = aktif(h);
+    const khusus = ms.filter(m=>m.nominal!=null && m.nominal>=0);
+    const rata = ms.filter(m=>!(m.nominal!=null && m.nominal>=0));
     const belanja = keluar(h, p);
-    if(belanja > 0) return Math.ceil(belanja / n);
-    return (h.setting.iuranTypes||[]).reduce((a,b)=>a+(+b.nominal||0),0);
+    const dasar = belanja > 0 ? belanja : tetap(h) * ms.length;   // belum ada belanja -> pakai cadangan
+    const sisa = Math.max(0, dasar - khusus.reduce((a,b)=>a+(+b.nominal||0),0));
+    const share = rata.length ? Math.ceil(sisa / rata.length) : 0;
+    return { share, dasar, belanja, khususCount: khusus.length, rataCount: rata.length };
   });
+}
+function tagihanOf(h, memberId, period){
+  const m = h.members.find(x=>x.id===memberId);
+  if(m && m.nominal!=null && m.nominal>=0) return +m.nominal;
+  return bagi(h, period).share;
+}
+function tagihan(h, period){ return bagi(h, period).share; }
+function totalTagihan(h, period){
+  return memo('totalTagihan:'+(period||thisPeriod()), ()=>
+    aktif(h).reduce((a,m)=>a+tagihanOf(h,m.id,period),0));
 }
 function tetap(h){ return (h.setting.iuranTypes||[]).reduce((a,b)=>a+(+b.nominal||0),0); }
 function paidOf(h, memberId, period){
@@ -439,7 +510,7 @@ function paidOf(h, memberId, period){
     h.payments.filter(p=>p.memberId===memberId && p.period===period).reduce((a,b)=>a+(+b.nominal||0),0));
 }
 function statusOf(h, memberId, period){
-  const p = paidOf(h, memberId, period), t = tagihan(h, period);
+  const p = paidOf(h, memberId, period), t = tagihanOf(h, memberId, period);
   if(p<=0) return 'belum';
   if(t>0 && p < t) return 'sebagian';
   return 'lunas';
@@ -666,7 +737,7 @@ function vBeranda(){
     </section>
 
     <div class="row mt">
-      <button class="btn gold sp" data-a="tab" data-v="belanja">${ic('plus')} Catat belanja</button>
+      <button class="btn gold sp" data-a="sheet" data-v="cepat">${ic('plus')} Catat belanja</button>
       <button class="btn soft sp" data-a="tab" data-v="tagihan">${ic('coins')} Tandai iuran</button>
     </div>
 
@@ -692,29 +763,32 @@ function vBeranda(){
       || '<div class="empty">Belum ada catatan. Mulai dari tombol Catat belanja.</div>'}</div></div>
 
     ${rules.length? `<div class="sec"><h2>Peraturan rumah</h2></div>
-    <div class="card"><div class="scrollbox">${rules.map((r,i)=>`<div class="rule"><span class="no">${i+1}</span><div>${esc(r.teks)}</div></div>`).join('')}</div></div>`:''}`;
+    <div class="card"><div class="scrollbox">${rules.map((r,i)=>`<div class="rule"><span class="no">${i+1}</span><div>${esc(r.teks)}</div></div>`).join('')}</div></div>`:''}
+
+    <button class="fab" data-a="sheet" data-v="cepat" aria-label="Catat belanja baru">${ic('plus')}</button>`;
 }
 
 /* ---------- TAGIHAN: anggota + status iuran jadi satu layar ---------- */
 function vTagihan(){
   const h = house(), p = S.period || thisPeriod(), ms = aktif(h);
   const t = tagihan(h, p), lock = locked(h,p);
-  const belanja = keluar(h,p), sum = masuk(h,p), target = t*ms.length;
+  const belanja = keluar(h,p), sum = masuk(h,p), b = bagi(h,p), target = totalTagihan(h,p);
   const lunas = ms.filter(m=>statusOf(h,m.id,p)==='lunas').length;
   const otomatis = belanja > 0;
 
-  const kartu = ms.map(m=>{
-    const st = statusOf(h,m.id,p), paid = paidOf(h,m.id,p);
-    return `<div class="pay ${st==='lunas'?'ok':st==='sebagian'?'part':''}">
+  const kartu = ms.map((m,i)=>{
+    const st = statusOf(h,m.id,p), paid = paidOf(h,m.id,p), bill = tagihanOf(h,m.id,p);
+    const khusus = m.nominal!=null && m.nominal>=0;
+    return `<div class="pay ${st==='lunas'?'ok':st==='sebagian'?'part':''} stag" style="--i:${i}">
       <button class="paytap" data-a="toggle-bayar" data-id="${m.id}" ${lock?'disabled':''} aria-label="Tandai ${esc(m.nama)} lunas">
         <span class="ava">${initials(m.nama)}</span>
-        <span class="bd"><b>${esc(m.nama)}</b>
-          <span>${st==='belum'? `Tagihan ${nf.format(t)} EGP`
-                : st==='sebagian'? `Baru ${nf.format(paid)} dari ${nf.format(t)}`
+        <span class="bd"><b>${esc(m.nama)}${khusus?' <span class="tag plain xs-tag">khusus</span>':''}</b>
+          <span>${st==='belum'? `Tagihan ${nf.format(bill)} EGP`
+                : st==='sebagian'? `Baru ${nf.format(paid)} dari ${nf.format(bill)}`
                 : `Lunas ${nf.format(paid)} EGP`}</span></span>
         <span class="tick">${ic('check')}</span>
       </button>
-      <button class="paymore" data-a="sheet" data-v="anggota" data-id="${m.id}" aria-label="Detail ${esc(m.nama)}">${ic('more')}</button>
+      <button class="paymore" data-a="sheet" data-v="anggota" data-id="${m.id}" aria-label="Atur iuran ${esc(m.nama)}">${ic('more')}</button>
     </div>`;
   }).join('');
 
@@ -725,12 +799,13 @@ function vTagihan(){
       <div class="tiny">Belanja rumah ${pShort(p)}</div>
       <div class="dsp" style="font-size:1.7rem">${egp(belanja)}</div>
       <div class="split-note mt-s">
-        <span>${nf.format(belanja)}</span><span>÷</span><span>${ms.length} orang</span><span>=</span>
+        <span>${nf.format(b.dasar)}</span>${b.khususCount? `<span>−</span><span>${b.khususCount} khusus</span>`:''}
+        <span>÷</span><span>${b.rataCount} orang</span><span>=</span>
         <b>${nf.format(t)} EGP</b>
       </div>
       <p class="tiny" style="margin:8px 0 0">${otomatis
-        ? 'Dibagi rata otomatis. Tiap belanja baru, tagihan per orang ikut menyesuaikan.'
-        : 'Belum ada belanja bulan ini, jadi dipakai iuran cadangan. Begitu ada belanja, langsung dibagi rata otomatis.'}</p>
+        ? 'Dibagi rata otomatis dari belanja bulan ini.'
+        : 'Belum ada belanja, dipakai iuran cadangan.'}${b.khususCount? ` ${b.khususCount} anggota pakai nominal sendiri.`:''} Atur nominal per orang lewat titik tiga.</p>
       <div class="row mt-s">
         <div class="sp"><div class="tiny">Terkumpul</div><b>${egp(sum)}</b></div>
         <span class="tag ${lunas===ms.length&&ms.length?'ok':'plain'}">${lunas}/${ms.length} lunas</span>
@@ -753,8 +828,7 @@ function vTagihan(){
     <div class="card"><div class="list">${keluarGrup.map(m=>`<button class="li" data-a="sheet" data-v="anggota" data-id="${m.id}">
       <span class="ava">${initials(m.nama)}</span><span class="bd"><b>${esc(m.nama)}</b><span>keluar ${dLabel(m.tglKeluar)}</span></span>
       <span class="tiny">›</span></button>`).join('')}</div></div>`:''}
-
-    <button class="fab" data-a="tab" data-v="belanja" aria-label="Catat belanja">${ic('plus')}</button>`;
+`;
 }
 function periodNav(p){
   return `<div class="row">
@@ -771,7 +845,7 @@ function vBelanja(){
   const kat = S.kat || (h.setting.kategori||[])[0] || 'Lain-lain';
   const list = h.expenses.filter(e=>e.tanggal.slice(0,7)===p).sort((a,b)=>b.tanggal.localeCompare(a.tanggal));
   const plan = (h.planned||[]).filter(x=>x.status==='rencana').sort((a,b)=>a.tanggalRencana.localeCompare(b.tanggalRencana));
-  return `${lock? `<div class="card flat"><b>Buku ${pLabel(p)} ditutup</b><p class="tiny" style="margin:4px 0 0">Buka kembali dari Lainnya → Laporan untuk mengoreksi.</p></div>`
+  return `<div class="belanja">${lock? `<div class="card flat"><b>Buku ${pLabel(p)} ditutup</b><p class="tiny" style="margin:4px 0 0">Buka kembali dari Lainnya → Laporan untuk mengoreksi.</p></div>`
     : `<div class="card">
       <div class="money"><input id="q-nominal" type="number" inputmode="decimal" placeholder="0" aria-label="Nominal belanja"><span>EGP</span></div>
       <div class="slide mt-s" role="group" aria-label="Kategori">
@@ -805,7 +879,8 @@ function vBelanja(){
         <span class="bd"><b>${esc(x.deskripsi)}</b><span>rencana ${dLabel(x.tanggalRencana)}</span></span>
         <span class="amt">${nf.format(x.estimasi)}</span>
         <button class="btn xs" data-a="sheet" data-v="realisasi" data-id="${x.id}">Sudah beli</button>
-      </div>`).join('') || '<div class="empty">Belum ada rencana.</div>'}</div></div>`;
+      </div>`).join('') || '<div class="empty">Belum ada rencana.</div>'}</div></div>
+    </div>`;
 }
 
 /* ---------- LAINNYA: laporan, simulasi, peraturan, setting ---------- */
@@ -1070,7 +1145,8 @@ function renderLayer(){
   const p = S.period || thisPeriod();
 
   if(name==='bayar'){
-    const t = tagihan(h,p);
+    const m0 = id ? id : (aktif(h)[0]||{}).id;
+    const t = m0? tagihanOf(h,m0,p) : 0;
     const m = id ? h.members.find(x=>x.id===id) : aktif(h)[0];
     const paid = m? paidOf(h,m.id,p) : 0;
     const riwayat = m? h.payments.filter(x=>x.memberId===m.id&&x.period===p) : [];
@@ -1088,6 +1164,18 @@ function renderLayer(){
       ${riwayat.length? `<div class="sec"><h2>Sudah tercatat ${pShort(p)}</h2></div><div class="card"><div class="list">${riwayat.map(x=>`<div class="li">
         <span class="bd"><b>${nf.format(x.nominal)} EGP</b><span>${dLabel(x.tanggal)} · ${esc(x.dicatatOleh)}</span></span>
         <button class="btn soft xs" data-a="del-bayar" data-id="${x.id}">Hapus</button></div>`).join('')}</div></div>`:''}`);
+  }
+  else if(name==='cepat'){
+    const kat = S.kat || (h.setting.kategori||[])[0] || 'Lain-lain';
+    L.innerHTML = sheet('Catat belanja', `
+      <div class="money"><input id="q-nominal" type="number" inputmode="decimal" placeholder="0" aria-label="Nominal"><span>EGP</span></div>
+      <div class="slide mt-s" role="group" aria-label="Kategori">
+        ${(h.setting.kategori||[]).map(k=>`<button class="chip ${k===kat?'on':''}" data-a="pilih-kat" data-v="${esc(k)}">${esc(k)}</button>`).join('')}
+      </div>
+      <label class="f mt-s"><span>Untuk apa</span><input id="q-deskripsi" placeholder="misal: beras 10 kg" autocomplete="off"></label>
+      <div id="err-q" class="err" hidden></div>
+      <button class="btn block" data-a="q-simpan">Simpan</button>
+      <button class="btn soft block mt-s" data-a="sheet" data-v="belanja-detail">Isi detail lengkap</button>`);
   }
   else if(name==='belanja-detail'){
     const e = id ? h.expenses.find(x=>x.id===id) : null;
@@ -1129,6 +1217,8 @@ function renderLayer(){
     L.innerHTML = sheet(m? esc(m.nama) : 'Tambah anggota', `
       <label class="f"><span>Nama</span><input id="nama" value="${m?esc(m.nama):''}"></label>
       <label class="f"><span>Nomor kamar <span class="hint">opsional</span></span><input id="kamar" value="${m?esc(m.kamar||''):''}"></label>
+      <label class="f"><span>Iuran khusus <span class="hint">kosongkan = ikut bagi rata (${nf.format(tagihan(h, S.period||thisPeriod()))} EGP)</span></span>
+        <div class="money"><input id="nominal-iuran" type="number" inputmode="decimal" placeholder="bagi rata" value="${m&&m.nominal!=null?m.nominal:''}"><span>EGP</span></div></label>
       <label class="f"><span>Status</span><select id="status">
         ${[['aktif','Aktif'],['cuti','Cuti / pulang kampung'],['keluar','Sudah keluar']].map(([v,l])=>`<option value="${v}" ${m&&m.status===v?'selected':''}>${l}</option>`).join('')}</select></label>
       <label class="f"><span>Tanggal gabung</span><input id="gabung" type="date" value="${m?m.tglGabung:today()}"></label>
@@ -1200,8 +1290,20 @@ function renderLayer(){
 const JUDUL = {beranda:null, tagihan:'Iuran & anggota', belanja:'Belanja', lainnya:'Lainnya',
   laporan:'Laporan bulanan', simulasi:'Simulasi iuran', 'jenis-iuran':'Nominal iuran', kategori:'Kategori belanja',
   peraturan:'Peraturan rumah', log:'Riwayat input', setting:'Setting rumah'};
+/* Gambar ulang tanpa mengganggu yang sedang mengetik:
+   simpan fokus + posisi kursor + posisi scroll, pasang lagi sesudahnya.
+   Animasi masuk hanya dinyalakan saat layar benar-benar berganti. */
+let viewKey = '';
 function render(){
   const app = document.getElementById('app');
+  const act = document.activeElement;
+  const simpan = (act && act.id && (act.tagName==='INPUT'||act.tagName==='TEXTAREA'))
+    ? {id:act.id, s:act.selectionStart, e:act.selectionEnd, v:act.value} : null;
+  const sy = window.scrollY;
+  const key = [S.route, S.tab, S.page, S.period, S.sheet&&S.sheet.name].join('/');
+  const pindah = key !== viewKey;
+  viewKey = key;
+  document.body.classList.toggle('anim', pindah);
   if(S.route==='landing') app.innerHTML = vLanding();
   else if(S.route==='aktivasi') app.innerHTML = vAktivasi();
   else if(S.route==='masuk') app.innerHTML = vMasuk();
@@ -1225,9 +1327,19 @@ function render(){
     app.innerHTML = chrome((back? back : '') + inner, JUDUL[page || S.tab]);
   }
   renderLayer();
+  if(simpan){
+    const el = document.getElementById(simpan.id);
+    if(el && el !== document.activeElement){
+      if(el.value === '' && simpan.v) el.value = simpan.v;   // jangan hilangkan ketikan
+      el.focus({preventScroll:true});
+      try{ el.setSelectionRange(simpan.s, simpan.e); }catch(e){}
+    }
+  }
+  if(!pindah && Math.abs(window.scrollY - sy) > 1) window.scrollTo({top:sy, behavior:'auto'});
+  if(pindah) window.scrollTo({top:0, behavior:'auto'});
 }
-function go(route){ S.route=route; S.page=null; S.sheet=null; window.scrollTo(0,0); render(); }
-function openTab(t){ S.tab=t; S.page=null; S.sheet=null; S.period=null; window.scrollTo(0,0); render(); }
+function go(route){ S.route=route; S.page=null; S.sheet=null; render(); }
+function openTab(t){ S.tab=t; S.page=null; S.sheet=null; S.period=null; render(); }
 function closeSheet(){ S.sheet=null; renderLayer(); }
 function ferr(msg){
   const e = document.getElementById('err-f') || document.getElementById('err-q');
@@ -1267,7 +1379,7 @@ document.addEventListener('click', async (ev)=>{
     case 'go': go(v); return;
     case 'close': case 'close-scrim': closeSheet(); return;
     case 'tab': openTab(v); return;
-    case 'page': S.page=v; S.sheet=null; window.scrollTo(0,0); render(); return;
+    case 'page': S.page=v; S.sheet=null; render(); return;
     case 'per': S.period = pShift(S.period||thisPeriod(), +v); render(); return;
     case 'sheet': S.sheet={name:v, id:id||null}; renderLayer(); return;
     case 'rules-ok': S.rulesPopup=false; renderLayer(); return;
@@ -1342,7 +1454,7 @@ document.addEventListener('click', async (ev)=>{
       const me = getMe(); if(!me){ S.sheet={name:'aku'}; renderLayer(); return; }
       const m = h.members.find(x=>x.id===id);
       const st = statusOf(h, id, p);
-      const t = tagihan(h,p);
+      const t = tagihanOf(h,id,p);
       if(st === 'belum'){
         if(!t){ S.sheet={name:'bayar', id}; renderLayer(); return toast('Belum ada belanja & iuran cadangan kosong — isi manual.'); }
         const tmp = 'tmp-'+uidLite();
@@ -1387,7 +1499,7 @@ document.addEventListener('click', async (ev)=>{
     }
 
     /* ---- belanja cepat ---- */
-    case 'pilih-kat': S.kat = v; render(); return;
+    case 'pilih-kat': S.kat = v; if(S.sheet) renderLayer(); else render(); return;
     case 'q-simpan': {
       const p = S.period || thisPeriod();
       if(locked(h,p)) return ferr('Buku periode ini ditutup.');
@@ -1406,6 +1518,7 @@ document.addEventListener('click', async (ev)=>{
           await catatLog(me, `Catat belanja ${d} ${nf.format(n)} EGP`, 'expenses');
         },
         ms? `${egp(n)} · ${kat} — tagihan/orang +${nf.format(tambahan)}` : `Tercatat ${egp(n)} · ${kat}`);
+      if(S.sheet && S.sheet.name==='cepat') closeSheet();
       return;
     }
     case 'sv-belanja': {
@@ -1477,7 +1590,9 @@ document.addEventListener('click', async (ev)=>{
     case 'sv-anggota': {
       const me = getMe()||'—';
       const nama = val('nama'); if(!nama) return ferr('Isi nama anggota.');
-      const data = {nama, no_kamar:val('kamar')||null, status:val('status'), tanggal_gabung:val('gabung')||today(), tanggal_keluar:val('keluar')||null};
+      const raw = val('nominal-iuran');
+      const data = {nama, no_kamar:val('kamar')||null, status:val('status'), tanggal_gabung:val('gabung')||today(),
+        tanggal_keluar:val('keluar')||null, nominal_iuran: raw==='' ? null : (parseFloat(raw)||0)};
       const ok = await doAction(async()=>{
         if(id){ await updateRow('members', id, data); await catatLog(me, `Ubah data anggota ${nama}`, 'members'); }
         else { await insertRow('members', {house_id:h.id, ...data}); await catatLog(me, `Tambah anggota ${nama}`, 'members'); }
