@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Igarin — Buku Kas Rumah Sewa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EAF1EE;
+  --card:#FFFFFF;
+  --nil:#0E4A46;
+  --nil-2:#17605A;
+  --nil-ink:#D9EDE7;
+  --ink:#102E2A;
+  --ink-2:#56736D;
+  --line:#D6E3DE;
+  --saffron:#E09B13;
+  --saffron-soft:#FBEFD3;
+  --lunas:#1C8A57;
+  --lunas-soft:#E0F2E7;
+  --sebagian:#B47708;
+  --belum:#BE3F37;
+  --belum-soft:#FBE6E3;
+  --r-card:16px;
+  --r-input:11px;
+  --shadow:0 1px 2px rgba(16,46,42,.06), 0 8px 24px -16px rgba(16,46,42,.28);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  background:var(--paper); color:var(--ink);
+  font-size:16px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;
+}
+h1,h2,h3,.display{font-family:"Bricolage Grotesque","Plus Jakarta Sans",sans-serif;font-weight:700;letter-spacing:-.02em;margin:0}
+h1{font-size:1.6rem;line-height:1.15}
+h2{font-size:1.15rem}
+h3{font-size:1rem}
+p{margin:0 0 .6em}
+a{color:var(--nil)}
+button{font-family:inherit}
+:focus-visible{outline:3px solid var(--saffron);outline-offset:2px;border-radius:6px}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- layout ---------- */
+#app{min-height:100dvh}
+.shell{max-width:920px;margin:0 auto;padding:0 16px 112px}
+.shell.narrow{max-width:520px}
+.topbar{
+  position:sticky;top:0;z-index:30;background:var(--paper);
+  padding:14px 16px 10px;max-width:920px;margin:0 auto;
+  display:flex;align-items:center;gap:12px;
+}
+.topbar .house{min-width:0}
+.topbar .house b{display:block;font-family:"Bricolage Grotesque",sans-serif;font-size:1.05rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar .house span{font-size:.78rem;color:var(--ink-2)}
+.topbar .sp{flex:1}
+.grid{display:grid;gap:12px}
+@media (min-width:720px){ .grid.two{grid-template-columns:1fr 1fr} }
+.row{display:flex;gap:10px;align-items:center}
+.row.wrap{flex-wrap:wrap}
+.sp{flex:1}
+.mt{margin-top:14px}
+.mt-s{margin-top:8px}
+.center{text-align:center}
+.muted{color:var(--ink-2);font-size:.85rem}
+.tiny{font-size:.75rem;color:var(--ink-2)}
+
+/* ---------- cards ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);padding:16px}
+.card.tight{padding:12px}
+.card h2,.card h3{margin-bottom:4px}
+.sec-head{display:flex;align-items:baseline;gap:10px;margin:22px 0 10px}
+.sec-head h2{flex:1}
+.hair{height:1px;background:var(--line);margin:14px -16px}
+
+/* ---------- hero saldo ---------- */
+.hero{
+  background:
+    radial-gradient(120% 100% at 92% 0%, rgba(224,155,19,.28), transparent 58%),
+    linear-gradient(168deg,var(--nil-2),var(--nil) 72%);
+  color:#fff;border-radius:20px;padding:18px 18px 14px;position:relative;overflow:hidden;
+}
+.hero .lbl{font-size:.8rem;color:var(--nil-ink);display:flex;align-items:center;gap:6px}
+.hero .amount{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:2.5rem;line-height:1.05;margin:2px 0 0}
+.hero .amount small{font-size:.9rem;font-weight:600;opacity:.75;margin-left:6px;font-family:"Plus Jakarta Sans",sans-serif}
+.hero .spark{position:absolute;right:0;bottom:0;width:52%;opacity:.5}
+.hero .split{display:flex;gap:8px;margin-top:14px;position:relative;z-index:2}
+.hero .split div{flex:1;background:rgba(255,255,255,.12);border-radius:12px;padding:8px 10px}
+.hero .split b{display:block;font-size:1rem;font-family:"Bricolage Grotesque",sans-serif}
+.hero .split span{font-size:.72rem;color:var(--nil-ink)}
+
+/* ---------- dots iuran ---------- */
+.dots{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px}
+.dot{width:100%;max-width:26px;height:8px;border-radius:99px;background:var(--belum)}
+.dot.ok{background:var(--lunas)}
+.dot.part{background:var(--sebagian)}
+
+/* ---------- buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:46px;padding:0 18px;border-radius:12px;border:1px solid var(--nil);
+  background:var(--nil);color:#fff;font-weight:600;font-size:.95rem;cursor:pointer;
+  transition:transform .12s ease, background .12s ease;
+}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent;color:var(--nil)}
+.btn.soft{background:#fff;color:var(--ink);border-color:var(--line)}
+.btn.warn{background:var(--belum);border-color:var(--belum)}
+.btn.gold{background:var(--saffron);border-color:var(--saffron);color:#3A2A02}
+.btn.block{width:100%}
+.btn.sm{min-height:38px;padding:0 12px;font-size:.85rem;border-radius:10px}
+.btn.icon{min-width:38px;padding:0 10px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{
+  flex:0 0 auto;min-height:40px;display:inline-flex;align-items:center;gap:7px;
+  padding:0 14px;border-radius:99px;border:1px solid var(--line);background:#fff;
+  font-size:.85rem;font-weight:600;color:var(--ink);cursor:pointer;
+}
+.chip.on{background:var(--nil);color:#fff;border-color:var(--nil)}
+.chip svg,.hero .lbl svg{width:18px;height:18px;flex:0 0 auto;stroke-width:1.8}
+
+/* ---------- forms ---------- */
+label.f{display:block;margin-bottom:12px}
+label.f > span{display:block;font-size:.82rem;font-weight:600;margin-bottom:5px}
+label.f .hint{font-weight:400;color:var(--ink-2)}
+input,select,textarea{
+  width:100%;min-height:46px;padding:10px 12px;border:1px solid var(--line);
+  border-radius:var(--r-input);background:#fff;font-family:inherit;font-size:1rem;color:var(--ink);
+}
+textarea{min-height:80px;resize:vertical}
+input[type=checkbox]{width:22px;min-height:22px;height:22px;accent-color:var(--nil)}
+.check{display:flex;align-items:center;gap:10px;font-size:.9rem;min-height:44px}
+.err{color:var(--belum);font-size:.82rem;margin-top:-6px;margin-bottom:10px}
+fieldset{border:1px solid var(--line);border-radius:var(--r-card);padding:12px;margin:0 0 12px}
+legend{font-size:.78rem;font-weight:700;padding:0 6px;color:var(--ink-2)}
+
+/* ---------- list rows ---------- */
+.list{display:flex;flex-direction:column}
+.item{display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}
+.item .body{flex:1;min-width:0}
+.item .body b{display:block;font-size:.95rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .body span{font-size:.78rem;color:var(--ink-2)}
+.item .val{font-weight:700;font-size:.95rem;white-space:nowrap}
+.val.in{color:var(--lunas)}
+.val.out{color:var(--belum)}
+.avatar{
+  width:38px;height:38px;border-radius:11px;background:var(--nil-ink);color:var(--nil);
+  display:grid;place-items:center;font-weight:700;font-size:.9rem;flex:0 0 auto;
+}
+.badge{display:inline-block;padding:3px 9px;border-radius:99px;font-size:.7rem;font-weight:700;border:1px solid transparent}
+.badge.ok{background:var(--lunas-soft);color:var(--lunas)}
+.badge.no{background:var(--belum-soft);color:var(--belum)}
+.badge.part{background:var(--saffron-soft);color:var(--sebagian)}
+.badge.neutral{background:var(--paper);color:var(--ink-2);border-color:var(--line)}
+.badge.big{background:var(--saffron-soft);color:var(--sebagian)}
+
+/* ---------- board ---------- */
+.board{display:grid;grid-template-columns:1fr;gap:8px}
+@media(min-width:560px){.board{grid-template-columns:1fr 1fr}}
+.pay{
+  display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;
+  border:1px solid var(--line);background:#fff;text-align:left;width:100%;cursor:pointer;min-height:60px;
+}
+.pay .bar{width:5px;align-self:stretch;border-radius:99px;background:var(--belum)}
+.pay.ok .bar{background:var(--lunas)}
+.pay.part .bar{background:var(--sebagian)}
+.pay .body{flex:1;min-width:0}
+.pay .body b{display:block;font-size:.92rem}
+.pay .body span{font-size:.75rem;color:var(--ink-2)}
+
+/* ---------- table ---------- */
+.tw{overflow-x:auto;margin:0 -16px;padding:0 16px}
+table{border-collapse:collapse;width:100%;font-size:.85rem}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:.72rem;color:var(--ink-2);font-weight:700}
+td.n,th.n{text-align:right}
+tr.total td{font-weight:700;border-top:2px solid var(--ink);border-bottom:0}
+
+/* ---------- bottom nav ---------- */
+.nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;
+  background:rgba(255,255,255,.94);backdrop-filter:blur(10px);
+  border-top:1px solid var(--line);
+  padding:6px 8px calc(6px + env(safe-area-inset-bottom));
+}
+.nav-in{max-width:920px;margin:0 auto;display:flex}
+.nav button{
+  flex:1;background:none;border:0;padding:6px 2px;cursor:pointer;color:var(--ink-2);
+  display:flex;flex-direction:column;align-items:center;gap:3px;font-size:.68rem;font-weight:600;
+  min-height:52px;border-radius:10px;
+}
+.nav button.on{color:var(--nil)}
+.nav button.on svg{stroke:var(--nil)}
+.nav svg{width:22px;height:22px;stroke:var(--ink-2);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- fab ---------- */
+.fab{
+  position:fixed;right:16px;bottom:calc(72px + env(safe-area-inset-bottom));z-index:41;
+  min-height:52px;padding:0 18px;border-radius:99px;border:0;background:var(--saffron);color:#3A2A02;
+  font-weight:700;box-shadow:0 10px 24px -10px rgba(224,155,19,.9);cursor:pointer;
+}
+@media(min-width:920px){.fab{right:calc(50vw - 444px)}}
+
+/* ---------- sheet / modal ---------- */
+.scrim{position:fixed;inset:0;background:rgba(16,46,42,.45);z-index:60;display:flex;align-items:flex-end;justify-content:center}
+@media(min-width:600px){.scrim{align-items:center}}
+.sheet{
+  background:var(--paper);width:100%;max-width:520px;max-height:92dvh;overflow:auto;
+  border-radius:20px 20px 0 0;padding:8px 16px calc(20px + env(safe-area-inset-bottom));
+}
+@media(min-width:600px){.sheet{border-radius:20px;max-height:88dvh}}
+.sheet-head{position:sticky;top:0;background:var(--paper);padding:8px 0 12px;display:flex;align-items:center;gap:10px;z-index:2}
+.sheet-head h2{flex:1}
+.x{background:none;border:0;font-size:1.4rem;line-height:1;color:var(--ink-2);cursor:pointer;min-width:44px;min-height:44px}
+.grab{width:42px;height:4px;border-radius:99px;background:var(--line);margin:6px auto 0}
+
+/* ---------- toast ---------- */
+.toast{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:calc(130px + env(safe-area-inset-bottom));
+  background:var(--ink);color:#fff;padding:11px 16px;border-radius:12px;z-index:80;font-size:.88rem;
+  max-width:88vw;box-shadow:var(--shadow)
+}
+
+/* ---------- landing ---------- */
+.land{max-width:520px;margin:0 auto;padding:26px 18px 60px}
+.brand{display:flex;align-items:center;gap:10px;font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:1.2rem}
+.mark{width:34px;height:34px;border-radius:10px;background:var(--nil);color:#fff;display:grid;place-items:center;font-size:1rem}
+.land h1{font-size:2.1rem;margin:24px 0 10px}
+.land .lede{font-size:1.02rem;color:var(--ink-2);margin-bottom:20px}
+.price{display:flex;align-items:baseline;gap:8px;margin:6px 0 2px}
+.price b{font-family:"Bricolage Grotesque",sans-serif;font-size:1.9rem}
+.feat{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:.9rem}
+.feat:last-child{border-bottom:0}
+.feat svg{width:18px;height:18px;flex:0 0 auto;margin-top:3px;stroke:var(--nil);fill:none;stroke-width:2}
+.steps{counter-reset:s;list-style:none;padding:0;margin:0}
+.steps li{counter-increment:s;position:relative;padding-left:34px;margin-bottom:12px;font-size:.9rem}
+.steps li::before{
+  content:counter(s);position:absolute;left:0;top:0;width:24px;height:24px;border-radius:8px;
+  background:var(--nil-ink);color:var(--nil);display:grid;place-items:center;font-size:.75rem;font-weight:700
+}
+
+/* ---------- code input ---------- */
+.code{font-size:1.5rem;letter-spacing:.28em;text-align:center;font-family:"Bricolage Grotesque",sans-serif;font-weight:700}
+
+/* ---------- charts ---------- */
+.legend{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.legend div{display:flex;align-items:center;gap:8px;font-size:.8rem}
+.legend i{width:10px;height:10px;border-radius:3px;flex:0 0 auto}
+.legend .v{margin-left:auto;font-weight:700}
+.empty{padding:22px 10px;text-align:center;color:var(--ink-2);font-size:.88rem;border:1px dashed var(--line);border-radius:12px}
+
+/* ---------- rules ---------- */
+.rule{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:.9rem}
+.rule:last-child{border-bottom:0}
+.rule .no{width:22px;height:22px;border-radius:7px;background:var(--saffron-soft);color:var(--sebagian);display:grid;place-items:center;font-size:.72rem;font-weight:700;flex:0 0 auto}
+.scrollbox{max-height:168px;overflow:auto}
+
+@media print{
+  .nav,.fab,.topbar,.noprint{display:none !important}
+  body{background:#fff}
+  .shell{padding:0;max-width:none}
+  .card{border:0;padding:0}
+  .tw{margin:0;padding:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="layer"></div>
+<script>
+/* =====================================================================
+   IGARIN — buku kas rumah sewa mahasiswa
+   Data disimpan lewat window.storage (persisten). Bila tidak tersedia,
+   aplikasi tetap jalan memakai memori sesi.
+   ===================================================================== */
+const KEY = 'igarin:v1';
+const HARGA_IDR = 149000;
+const RANGE = [1200, 3500];
+const KAT_DEFAULT = ['Dapur','Listrik','Air','Gas','Internet','Kebersihan','Sewa','Lain-lain'];
+const IURAN_DEFAULT = [
+  {id:'i1', nama:'Sewa (ijar)', nominal:750},
+  {id:'i2', nama:'Listrik (kahraba)', nominal:150},
+  {id:'i3', nama:'Air', nominal:50},
+  {id:'i4', nama:'Gas', nominal:45},
+  {id:'i5', nama:'Dapur', nominal:500},
+  {id:'i6', nama:'Internet', nominal:70},
+];
+
+let DB = null;                 // { codes, houses, sales, session }
+let S  = { route:'landing', tab:'beranda', period:null, filter:'semua', pending:{} };
+let memOnly = false;
+
+/* ---------- storage ---------- */
+async function load(){
+  try{
+    const r = await window.storage.get(KEY);
+    DB = JSON.parse(r.value);
+  }catch(e){
+    DB = null;
+  }
+  if(!DB || !DB.houses){ DB = seed(); await save(); }
+  if(!DB.session) DB.session = {};
+}
+let saveTimer = null;
+async function save(){
+  if(memOnly) return;
+  clearTimeout(saveTimer);
+  return new Promise(res=>{
+    saveTimer = setTimeout(async()=>{
+      try{ await window.storage.set(KEY, JSON.stringify(DB)); }
+      catch(e){ memOnly = true; toast('Penyimpanan tidak tersedia — data hanya tersimpan di sesi ini.'); }
+      res();
+    }, 120);
+  });
+}
+function seed(){
+  return { codes: genCodes(300), houses:{}, sales:[], session:{}, ownerUnlocked:false };
+}
+function genCodes(n){
+  const out = [], seen = new Set();
+  while(out.length < n){
+    const k = String(Math.floor(100000000 + Math.random()*899999999));
+    if(seen.has(k)) continue;
+    seen.add(k);
+    out.push({ kode:k, status:'tersedia', houseId:null, tglGenerate:today(), tglTerpakai:null, batch:1 });
+  }
+  return out;
+}
+
+/* ---------- util ---------- */
+const uid = () => Math.random().toString(36).slice(2,10);
+const today = () => new Date().toISOString().slice(0,10);
+const thisPeriod = () => new Date().toISOString().slice(0,7);
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nf = new Intl.NumberFormat('id-ID', {maximumFractionDigits:0});
+const egp = n => nf.format(Math.round(n||0)) + ' EGP';
+const idr = n => 'Rp' + nf.format(Math.round(n||0));
+const BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+function pLabel(p){ if(!p) return '—'; const [y,m]=p.split('-'); return BULAN[+m-1] + ' ' + y; }
+function pShort(p){ const [y,m]=p.split('-'); return BULAN[+m-1].slice(0,3) + ' ' + y.slice(2); }
+function pShift(p, d){ const [y,m]=p.split('-').map(Number); const dt=new Date(y, m-1+d, 1); return dt.toISOString().slice(0,7); }
+function dLabel(d){ if(!d) return '—'; const [y,m,dd]=d.split('-'); return `${+dd} ${BULAN[+m-1].slice(0,3)} ${y}`; }
+function initials(n){ return String(n||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
+async function sha(t){
+  try{
+    const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('igarin$'+t));
+    return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
+  }catch(e){ return 'plain$'+t; }
+}
+function house(){ return DB.houses[DB.session.houseId] || null; }
+function toast(msg){
+  const old = document.querySelector('.toast'); if(old) old.remove();
+  const t = document.createElement('div'); t.className='toast'; t.setAttribute('role','status'); t.textContent = msg;
+  document.body.appendChild(t); setTimeout(()=>t.remove(), 3000);
+}
+function logAct(nama, aksi, tabel){
+  const h = house(); if(!h) return;
+  h.log.unshift({id:uid(), nama:nama||'—', aksi, tabel, ts:new Date().toISOString()});
+  h.log = h.log.slice(0,300);
+}
+const ICON = {
+  home:'<path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/>',
+  coins:'<circle cx="9" cy="8" r="4.5"/><path d="M14 5.3a4.5 4.5 0 0 1 0 9M4.5 19.5c1-2.3 2.6-3.5 4.5-3.5s3.5 1.2 4.5 3.5"/>',
+  receipt:'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
+  chart:'<path d="M4 20V4M4 20h16"/><path d="M8 20v-6M12.5 20V8M17 20v-9"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M12 3v2m0 14v2M4.2 7.5l1.7 1M18.1 15.5l1.7 1M4.2 16.5l1.7-1M18.1 8.5l1.7-1"/>',
+  users:'<circle cx="9" cy="8" r="3.4"/><path d="M3.5 19c.8-2.8 2.9-4.3 5.5-4.3S13.7 16.2 14.5 19"/><path d="M16 5.4a3.4 3.4 0 0 1 0 6.8M17 14.9c1.8.5 3.1 1.9 3.6 4.1"/>',
+  calc:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h2m3 0h3M8 16h2m3 0h3"/>',
+  check:'<path d="m4 12.5 5 5L20 6.5"/>',
+  clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+  book:'<path d="M4 4h9a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M16 7h4v13h-4"/>'
+};
+const ic = (n, cls='') => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
+
+/* ---------- perhitungan ---------- */
+function aktif(h){ return h.members.filter(m=>m.status==='aktif'||m.status==='cuti'); }
+function tagihan(h){ return (h.setting.iuranTypes||[]).reduce((a,b)=>a+(+b.nominal||0),0); }
+function paidOf(h, memberId, period){
+  return h.payments.filter(p=>p.memberId===memberId && p.period===period).reduce((a,b)=>a+(+b.nominal||0),0);
+}
+function statusOf(h, memberId, period){
+  const p = paidOf(h, memberId, period), t = tagihan(h);
+  if(p<=0) return 'belum';
+  if(t>0 && p < t) return 'sebagian';
+  return 'lunas';
+}
+function masuk(h, period){ return h.payments.filter(p=>!period||p.period===period).reduce((a,b)=>a+(+b.nominal||0),0); }
+function keluar(h, period){ return h.expenses.filter(e=>!period||e.tanggal.slice(0,7)===period).reduce((a,b)=>a+(+b.nominal||0),0); }
+function saldo(h){ return (+h.setting.saldoAwal||0) + masuk(h) - keluar(h); }
+function saldoHingga(h, period){
+  const mIn = h.payments.filter(p=>p.period<=period).reduce((a,b)=>a+(+b.nominal||0),0);
+  const mOut = h.expenses.filter(e=>e.tanggal.slice(0,7)<=period).reduce((a,b)=>a+(+b.nominal||0),0);
+  return (+h.setting.saldoAwal||0) + mIn - mOut;
+}
+function lastPeriods(n){
+  const out=[]; let p=thisPeriod();
+  for(let i=0;i<n;i++){ out.unshift(p); p=pShift(p,-1); }
+  return out;
+}
+function locked(h, period){ return (h.closed||[]).includes(period); }
+
+/* ---------- grafik (SVG tangan sendiri) ---------- */
+const PIE_COLORS = ['#0E4A46','#E09B13','#1C8A57','#8A5FBF','#C2443B','#2C7DA0','#B47708','#56736D','#4E9A6B','#9A4E78'];
+function donut(data){
+  const total = data.reduce((a,b)=>a+b.v, 0);
+  if(!total) return `<div class="empty">Belum ada pengeluaran pada periode ini.</div>`;
+  const R=54, C=2*Math.PI*R; let off=0;
+  const arcs = data.map((d,i)=>{
+    const len = C*(d.v/total);
+    const s = `<circle cx="70" cy="70" r="${R}" fill="none" stroke="${PIE_COLORS[i%10]}" stroke-width="22"
+      stroke-dasharray="${len.toFixed(2)} ${(C-len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}"
+      transform="rotate(-90 70 70)"><title>${esc(d.k)}: ${egp(d.v)}</title></circle>`;
+    off += len; return s;
+  }).join('');
+  const legend = data.map((d,i)=>`<div><i style="background:${PIE_COLORS[i%10]}"></i>${esc(d.k)}
+    <span class="v">${Math.round(d.v/total*100)}% · ${egp(d.v)}</span></div>`).join('');
+  return `<div class="row" style="align-items:center;gap:14px;flex-wrap:wrap">
+    <svg viewBox="0 0 140 140" style="width:140px;height:140px;flex:0 0 auto" role="img" aria-label="Proporsi pengeluaran per kategori">
+      ${arcs}
+      <text x="70" y="66" text-anchor="middle" font-size="9" fill="#56736D" font-family="Plus Jakarta Sans">Total</text>
+      <text x="70" y="82" text-anchor="middle" font-size="14" font-weight="700" fill="#102E2A" font-family="Bricolage Grotesque">${nf.format(total)}</text>
+    </svg>
+    <div class="legend sp" style="min-width:190px">${legend}</div></div>`;
+}
+function bars(rows){
+  const max = Math.max(1, ...rows.map(r=>Math.max(r.in, r.out)));
+  const W=320, H=150, pad=22, gw=(W-pad)/rows.length;
+  const body = rows.map((r,i)=>{
+    const x = pad + i*gw, bw=(gw-12)/2;
+    const hi = (H-34)*(r.in/max), ho=(H-34)*(r.out/max);
+    return `<rect x="${x+2}" y="${H-24-hi}" width="${bw}" height="${Math.max(hi,1)}" rx="3" fill="#1C8A57"><title>Masuk ${pShort(r.p)}: ${egp(r.in)}</title></rect>
+      <rect x="${x+bw+6}" y="${H-24-ho}" width="${bw}" height="${Math.max(ho,1)}" rx="3" fill="#C2443B"><title>Keluar ${pShort(r.p)}: ${egp(r.out)}</title></rect>
+      <text x="${x+gw/2-3}" y="${H-8}" font-size="9" text-anchor="middle" fill="#56736D">${pShort(r.p).split(' ')[0]}</text>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto" role="img" aria-label="Pemasukan dan pengeluaran 6 bulan terakhir" font-family="Plus Jakarta Sans">
+    <line x1="${pad}" y1="${H-24}" x2="${W}" y2="${H-24}" stroke="#D6E3DE"/>
+    <text x="0" y="14" font-size="9" fill="#56736D">${nf.format(max)}</text>${body}</svg>
+    <div class="legend"><div><i style="background:#1C8A57"></i>Iuran masuk</div><div><i style="background:#C2443B"></i>Pengeluaran</div></div>`;
+}
+function line(rows){
+  const vals = rows.map(r=>r.v), max=Math.max(...vals,1), min=Math.min(...vals,0);
+  const W=320,H=120,pad=8;
+  const x = i => pad + i*((W-pad*2)/Math.max(1,rows.length-1));
+  const y = v => 14 + (H-34) * (1 - (v-min)/Math.max(1,(max-min)));
+  const pts = rows.map((r,i)=>`${x(i).toFixed(1)},${y(r.v).toFixed(1)}`).join(' ');
+  const dots = rows.map((r,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(r.v).toFixed(1)}" r="3" fill="#0E4A46"><title>${pShort(r.p)}: ${egp(r.v)}</title></circle>`).join('');
+  const labels = rows.map((r,i)=>`<text x="${x(i).toFixed(1)}" y="${H-4}" font-size="9" text-anchor="middle" fill="#56736D">${pShort(r.p).split(' ')[0]}</text>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto" role="img" aria-label="Tren saldo kas" font-family="Plus Jakarta Sans">
+    <polygon points="${pts} ${x(rows.length-1).toFixed(1)},${H-20} ${pad},${H-20}" fill="rgba(14,74,70,.10)"/>
+    <polyline points="${pts}" fill="none" stroke="#0E4A46" stroke-width="2.2" stroke-linejoin="round"/>${dots}${labels}</svg>`;
+}
+function sparkline(rows){
+  const vals = rows.map(r=>r.v), max=Math.max(...vals,1), min=Math.min(...vals,0);
+  const pts = rows.map((r,i)=>`${i*(100/Math.max(1,rows.length-1))},${(40-36*((r.v-min)/Math.max(1,max-min))).toFixed(1)}`).join(' ');
+  return `<svg class="spark" viewBox="0 0 100 44" preserveAspectRatio="none" aria-hidden="true">
+    <polygon points="${pts} 100,44 0,44" fill="rgba(255,255,255,.16)"/>
+    <polyline points="${pts}" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="1.6"/></svg>`;
+}
+
+/* =====================================================================
+   TAMPILAN LUAR: landing, aktivasi, masuk, panel pemilik
+   ===================================================================== */
+function vLanding(){
+  const terjual = DB.codes.filter(c=>c.status==='terpakai').length;
+  return `<div class="land">
+    <div class="brand"><span class="mark">ig</span> Igarin</div>
+
+    <h1>Satu buku kas untuk satu rumah, dibuka siapa saja yang tinggal di dalamnya.</h1>
+    <p class="lede">Catat iuran per orang tiap bulan, catat belanja rumah, lihat saldo kas kapan pun. Tanpa denda, tanpa tagih-menagih — cuma catatan yang sama-sama bisa dilihat.</p>
+
+    <div class="card">
+      <div class="row">
+        <div class="sp">
+          <div class="price"><b>${idr(HARGA_IDR)}</b><span class="muted">/ rumah</span></div>
+          <div class="tiny">Sekali bayar, akses selamanya. ${300-terjual} dari 300 kode masih tersedia.</div>
+        </div>
+      </div>
+      <div class="hair"></div>
+      <div class="feat">${ic('check')}<div>Papan status iuran: siapa lunas, siapa belum, terlihat semua penghuni.</div></div>
+      <div class="feat">${ic('check')}<div>Pengeluaran harian dan belanja besar, lengkap dengan grafik per kategori.</div></div>
+      <div class="feat">${ic('check')}<div>Setiap catatan menyimpan nama yang menginput, karena akunnya dipakai bersama.</div></div>
+      <div class="feat">${ic('check')}<div>Peraturan rumah muncul sebagai pengingat saat app dibuka.</div></div>
+      <div class="feat">${ic('check')}<div>Laporan bulanan siap diunduh atau dicetak, plus tutup buku periode.</div></div>
+      <div class="mt"><button class="btn block" data-a="go" data-v="masuk">Masuk ke rumah saya</button></div>
+      <div class="mt-s"><button class="btn soft block" data-a="go" data-v="aktivasi">Aktivasi rumah baru</button></div>
+    </div>
+
+    <div class="sec-head"><h2>Cara mulai</h2></div>
+    <ol class="steps">
+      <li>Transfer ${idr(HARGA_IDR)} ke rekening atau QRIS yang tertera, lalu kirim bukti lewat WhatsApp.</li>
+      <li>Pembayaran dicek manual, biasanya di bawah 24 jam.</li>
+      <li>Kode aktivasi 9 digit dikirim ke WhatsApp atau email kamu.</li>
+      <li>Masukkan kode di app, buat username dan password rumah, mulai catat.</li>
+    </ol>
+
+    <div class="card mt">
+      <h3>Coba dulu tanpa kode</h3>
+      <p class="muted">Isi satu rumah contoh berisi 6 anggota, tiga bulan iuran, dan puluhan pengeluaran supaya kelihatan penuh.</p>
+      <button class="btn gold block" data-a="demo">Buka rumah contoh</button>
+    </div>
+
+    <div class="center mt"><button class="btn ghost sm" data-a="go" data-v="owner">Panel pemilik produk</button></div>
+    <p class="tiny center mt">Mata uang di dalam app: EGP. Pembelian akses: IDR.</p>
+  </div>`;
+}
+
+function vAktivasi(){
+  return `<div class="land">
+    <button class="btn ghost sm" data-a="go" data-v="landing">← Kembali</button>
+    <h1 style="font-size:1.7rem">Aktivasi rumah</h1>
+    <p class="lede">Masukkan kode 9 digit yang dikirim setelah pembayaran diverifikasi.</p>
+    <div class="card">
+      <label class="f"><span>Kode aktivasi</span>
+        <input id="kode" class="code" inputmode="numeric" maxlength="9" placeholder="000000000" autocomplete="off"></label>
+      <div id="err-kode" class="err" hidden></div>
+      <label class="f"><span>Nama rumah</span><input id="nama" placeholder="Rumah Nasr City 3"></label>
+      <label class="f"><span>Kontak WhatsApp <span class="hint">untuk reset password</span></span><input id="kontak" inputmode="tel" placeholder="+20 10 1234 5678"></label>
+      <label class="f"><span>Username rumah</span><input id="user" autocapitalize="none" autocomplete="username" placeholder="nasrcity3"></label>
+      <label class="f"><span>Password <span class="hint">minimal 6 karakter</span></span><input id="pass" type="password" autocomplete="new-password"></label>
+      <label class="f"><span>Ulangi password</span><input id="pass2" type="password" autocomplete="new-password"></label>
+      <button class="btn block" data-a="aktivasi">Aktifkan rumah</button>
+    </div>
+    <p class="tiny center mt">Kode salah atau sudah terpakai? Hubungi admin lewat WhatsApp yang tertera di halaman depan.</p>
+  </div>`;
+}
+
+function vMasuk(){
+  const daftar = Object.values(DB.houses);
+  return `<div class="land">
+    <button class="btn ghost sm" data-a="go" data-v="landing">← Kembali</button>
+    <h1 style="font-size:1.7rem">Masuk</h1>
+    <p class="lede">Satu akun dipakai bersama seluruh penghuni rumah.</p>
+    <div class="card">
+      <label class="f"><span>Username rumah</span><input id="user" autocapitalize="none" autocomplete="username"></label>
+      <label class="f"><span>Password</span><input id="pass" type="password" autocomplete="current-password"></label>
+      <div id="err-login" class="err" hidden></div>
+      <button class="btn block" data-a="masuk">Masuk</button>
+    </div>
+    ${daftar.length? `<p class="tiny center mt">Rumah terdaftar di perangkat ini: ${daftar.map(h=>esc(h.auth.username)).join(', ')}</p>`:''}
+    <p class="tiny center mt">Lupa password? Hubungi admin dengan nomor WhatsApp yang dipakai saat aktivasi.</p>
+  </div>`;
+}
+
+/* ---------- panel pemilik ---------- */
+function vOwner(){
+  if(!DB.ownerUnlocked){
+    return `<div class="land">
+      <button class="btn ghost sm" data-a="go" data-v="landing">← Kembali</button>
+      <h1 style="font-size:1.7rem">Panel pemilik</h1>
+      <p class="lede">Halaman ini hanya untuk penjual Igarin: stok kode, verifikasi pembayaran, dan rekap pendapatan.</p>
+      <div class="card">
+        <label class="f"><span>Kata sandi pemilik</span><input id="ownpass" type="password" placeholder="igarin2026"></label>
+        <div id="err-own" class="err" hidden></div>
+        <button class="btn block" data-a="owner-unlock">Buka panel</button>
+        <p class="tiny mt-s">Sandi bawaan demo: igarin2026 — ganti di baris OWNER_PASS pada kode sumber.</p>
+      </div></div>`;
+  }
+  const c = DB.codes;
+  const terpakai = c.filter(x=>x.status==='terpakai');
+  const tersedia = c.length - terpakai.length;
+  const rev = terpakai.length * HARGA_IDR;
+  const f = S.filter;
+  const rows = c.filter(x=> f==='semua' ? true : x.status===f).slice(0, 60).map(x=>`<tr>
+      <td class="num">${x.kode}</td>
+      <td>${x.status==='terpakai'? '<span class="badge no">terpakai</span>':'<span class="badge ok">tersedia</span>'}</td>
+      <td>${x.houseId && DB.houses[x.houseId] ? esc(DB.houses[x.houseId].nama) : '—'}</td>
+      <td>${x.tglTerpakai? dLabel(x.tglTerpakai):'—'}</td>
+      <td class="n">${x.batch}</td></tr>`).join('');
+  const sales = (DB.sales||[]).map(s=>`<div class="item"><div class="body"><b>${esc(s.nama)}</b>
+      <span>${esc(s.kontak||'—')} · kode ${s.kode} · ${dLabel(s.tanggal)}</span></div>
+      <div class="val">${idr(s.nominal)}</div></div>`).join('') || '<div class="empty">Belum ada transaksi dicatat.</div>';
+  return `<div class="shell narrow" style="padding-top:18px">
+    <div class="row"><button class="btn ghost sm" data-a="go" data-v="landing">← Keluar panel</button></div>
+    <h1 class="mt">Panel pemilik</h1>
+    <div class="grid two mt">
+      <div class="card tight"><div class="tiny">Pendapatan tercatat</div><div class="display" style="font-size:1.5rem">${idr(rev)}</div>
+        <div class="tiny">${terpakai.length} rumah aktif × ${idr(HARGA_IDR)}</div></div>
+      <div class="card tight"><div class="tiny">Sisa stok kode</div><div class="display" style="font-size:1.5rem">${tersedia}</div>
+        <div class="tiny">dari total ${c.length} kode</div></div>
+    </div>
+    <div class="row wrap mt">
+      <button class="btn sm" data-a="own-batch">Generate 100 kode baru</button>
+      <button class="btn soft sm" data-a="own-csv">Unduh kode (CSV)</button>
+      <button class="btn soft sm" data-a="own-sale">Catat penjualan manual</button>
+    </div>
+    <div class="sec-head"><h2>Stok kode</h2></div>
+    <div class="chips">
+      ${['semua','tersedia','terpakai'].map(k=>`<button class="chip ${f===k?'on':''}" data-a="own-filter" data-v="${k}">${k}</button>`).join('')}
+    </div>
+    <div class="card tight mt-s"><div class="tw"><table>
+      <thead><tr><th>Kode</th><th>Status</th><th>Rumah</th><th>Terpakai</th><th class="n">Batch</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+      <p class="tiny mt-s">Menampilkan maksimal 60 baris. Gunakan filter atau unduh CSV untuk daftar penuh.</p></div>
+    <div class="sec-head"><h2>Riwayat verifikasi pembayaran</h2></div>
+    <div class="card"><div class="list">${sales}</div></div>
+  </div>`;
+}
+const OWNER_PASS = 'igarin2026';
+
+/* =====================================================================
+   APLIKASI RUMAH
+   ===================================================================== */
+function chrome(inner){
+  const h = house();
+  const tabs = [
+    ['beranda','Beranda','home'],
+    ['iuran','Iuran','coins'],
+    ['pengeluaran','Belanja','receipt'],
+    ['laporan','Laporan','chart'],
+    ['setting','Setting','gear'],
+  ];
+  return `<header class="topbar">
+      <div class="avatar" aria-hidden="true">${initials(h.nama)}</div>
+      <div class="house sp"><b>${esc(h.nama)}</b><span>${aktif(h).length} penghuni · iuran ${h.setting.waktuPenagihan==='awal'?'awal':'akhir'} bulan</span></div>
+      <button class="btn soft sm" data-a="keluar">Keluar akun</button>
+    </header>
+    <main class="shell">${inner}</main>
+    <nav class="nav" aria-label="Navigasi utama"><div class="nav-in">
+      ${tabs.map(t=>`<button class="${S.tab===t[0]?'on':''}" data-a="tab" data-v="${t[0]}" aria-current="${S.tab===t[0]}">${ic(t[2])}${t[1]}</button>`).join('')}
+    </div></nav>`;
+}
+
+/* ---------- beranda ---------- */
+function vBeranda(){
+  const h = house(), p = thisPeriod(), t = tagihan(h), ms = aktif(h);
+  const lunas = ms.filter(m=>statusOf(h,m.id,p)==='lunas').length;
+  const trend = lastPeriods(6).map(x=>({p:x, v:saldoHingga(h,x)}));
+  const perKat = {};
+  h.expenses.filter(e=>e.tanggal.slice(0,7)===p).forEach(e=>{ perKat[e.kategori]=(perKat[e.kategori]||0)+(+e.nominal||0); });
+  const donutData = Object.entries(perKat).map(([k,v])=>({k,v})).sort((a,b)=>b.v-a.v);
+  const barRows = lastPeriods(6).map(x=>({p:x, in:masuk(h,x), out:keluar(h,x)}));
+  const recent = [
+    ...h.payments.map(x=>({d:x.tanggal||x.period+'-01', t:'in', n:+x.nominal, l:(h.members.find(m=>m.id===x.memberId)||{}).nama+' — iuran '+pShort(x.period), by:x.dicatatOleh})),
+    ...h.expenses.map(x=>({d:x.tanggal, t:'out', n:+x.nominal, l:x.deskripsi+' · '+x.kategori, by:x.dicatatOleh, besar:x.besar}))
+  ].sort((a,b)=>b.d.localeCompare(a.d)).slice(0,5);
+  const rules = (h.rules||[]).filter(r=>r.aktif);
+  const plan = (h.planned||[]).filter(x=>x.status==='rencana').sort((a,b)=>a.tanggalRencana.localeCompare(b.tanggalRencana)).slice(0,3);
+
+  return `<section class="hero">
+      ${sparkline(trend)}
+      <div class="lbl">${ic('book')} Saldo kas rumah</div>
+      <div class="amount">${nf.format(saldo(h))}<small>EGP</small></div>
+      <div class="split">
+        <div><b>${nf.format(masuk(h,p))}</b><span>Iuran masuk ${pShort(p)}</span></div>
+        <div><b>${nf.format(keluar(h,p))}</b><span>Keluar ${pShort(p)}</span></div>
+      </div>
+    </section>
+
+    <div class="card mt">
+      <div class="row"><h3 class="sp">Iuran ${pLabel(p)}</h3>
+        <span class="badge ${lunas===ms.length&&ms.length?'ok':'neutral'}">${lunas}/${ms.length} lunas</span></div>
+      <div class="dots">${ms.map(m=>{const s=statusOf(h,m.id,p);
+        return `<span class="dot ${s==='lunas'?'ok':s==='sebagian'?'part':''}" title="${esc(m.nama)}: ${s}"></span>`;}).join('')||'<span class="muted">Belum ada anggota.</span>'}</div>
+      <p class="tiny mt-s">Tagihan per orang bulan ini ${egp(t)}. ${ms.length-lunas} orang belum lunas.</p>
+      <button class="btn soft sm mt-s" data-a="tab" data-v="iuran">Buka papan status</button>
+    </div>
+
+    <div class="row wrap mt">
+      <button class="chip" data-a="page" data-v="anggota">${ic('users')} Anggota</button>
+      <button class="chip" data-a="page" data-v="simulasi">${ic('calc')} Simulasi iuran</button>
+      <button class="chip" data-a="page" data-v="log">${ic('clock')} Riwayat input</button>
+    </div>
+
+    <div class="sec-head"><h2>Pengeluaran ${pShort(p)}</h2><span class="muted">${egp(keluar(h,p))}</span></div>
+    <div class="card">${donut(donutData)}</div>
+
+    <div class="grid two mt">
+      <div class="card"><h3>Masuk vs keluar</h3><p class="tiny">Enam bulan terakhir</p>${bars(barRows)}</div>
+      <div class="card"><h3>Tren saldo kas</h3><p class="tiny">Posisi akhir tiap bulan</p>${line(trend)}</div>
+    </div>
+
+    <div class="sec-head"><h2>Catatan terakhir</h2></div>
+    <div class="card"><div class="list">${recent.map(r=>`<div class="item">
+        <div class="body"><b>${esc(r.l)}</b><span>${dLabel(r.d)} · dicatat ${esc(r.by||'—')}</span></div>
+        ${r.besar?'<span class="badge big">besar</span>':''}
+        <div class="val ${r.t}">${r.t==='in'?'+':'−'}${nf.format(r.n)}</div></div>`).join('') || '<div class="empty">Belum ada transaksi. Mulai dari tombol Catat.</div>'}</div></div>
+
+    ${plan.length?`<div class="sec-head"><h2>Rencana pengeluaran</h2></div>
+    <div class="card"><div class="list">${plan.map(x=>`<div class="item">
+      <div class="body"><b>${esc(x.deskripsi)}</b><span>rencana ${dLabel(x.tanggalRencana)}</span></div>
+      <div class="val">${nf.format(x.estimasi)}</div></div>`).join('')}</div>
+      <button class="btn soft sm mt-s" data-a="tab" data-v="pengeluaran">Lihat semua rencana</button></div>`:''}
+
+    <div class="sec-head"><h2>Peraturan rumah</h2><button class="btn ghost sm" data-a="page" data-v="peraturan">Ubah</button></div>
+    <div class="card"><div class="scrollbox">${rules.length? rules.map((r,i)=>`<div class="rule"><span class="no">${i+1}</span><div>${esc(r.teks)}</div></div>`).join('')
+      : '<div class="empty">Belum ada peraturan. Isi dari Setting supaya muncul sebagai pengingat saat app dibuka.</div>'}</div></div>
+
+    <button class="fab" data-a="sheet" data-v="pilih-catat">+ Catat</button>`;
+}
+
+/* ---------- iuran ---------- */
+function vIuran(){
+  const h = house(), p = S.period || thisPeriod(), t = tagihan(h), ms = aktif(h);
+  const lock = locked(h,p);
+  const cards = ms.map(m=>{
+    const st = statusOf(h,m.id,p), paid = paidOf(h,m.id,p);
+    const last = h.payments.filter(x=>x.memberId===m.id&&x.period===p).sort((a,b)=>(b.tanggal||'').localeCompare(a.tanggal||''))[0];
+    return `<button class="pay ${st==='lunas'?'ok':st==='sebagian'?'part':''}" data-a="sheet" data-v="bayar" data-id="${m.id}">
+      <span class="bar"></span>
+      <span class="body"><b>${esc(m.nama)}${m.status==='cuti'?' · cuti':''}</b>
+        <span>${st==='belum'? 'Belum bayar' : (st==='sebagian'? `Sebagian ${nf.format(paid)}/${nf.format(t)}` : `Lunas ${nf.format(paid)}`)}${last&&last.tanggal?` · ${dLabel(last.tanggal)}`:''}</span></span>
+      <span class="badge ${st==='lunas'?'ok':st==='sebagian'?'part':'no'}">${st==='lunas'?'lunas':st==='sebagian'?'sebagian':'belum'}</span>
+    </button>`;
+  }).join('');
+  const sum = masuk(h,p), target = t*ms.length;
+  return `<div class="sec-head"><h2>Papan status iuran</h2></div>
+    ${periodNav(p)}
+    <div class="card mt-s">
+      <div class="row"><div class="sp"><div class="tiny">Terkumpul ${pLabel(p)}</div>
+        <div class="display" style="font-size:1.5rem">${egp(sum)}</div>
+        <div class="tiny">dari target ${egp(target)} · ${target?Math.round(sum/target*100):0}%</div></div>
+        ${lock?'<span class="badge neutral">buku ditutup</span>':''}</div>
+    </div>
+    <div class="board mt">${cards || '<div class="empty">Belum ada anggota aktif. Tambah dulu dari Beranda → Anggota.</div>'}</div>
+    <p class="tiny mt">Papan ini murni informasi bersama. Igarin tidak mengirim peringatan atau tagihan otomatis ke siapa pun.</p>
+    <div class="sec-head"><h2>Jenis iuran</h2><button class="btn ghost sm" data-a="page" data-v="jenis-iuran">Atur</button></div>
+    <div class="card"><div class="list">${(h.setting.iuranTypes||[]).map(x=>`<div class="item">
+        <div class="body"><b>${esc(x.nama)}</b></div><div class="val">${nf.format(x.nominal)}</div></div>`).join('')}
+      <div class="item total" style="border-top:2px solid var(--ink)"><div class="body"><b>Total per orang</b></div><div class="val">${nf.format(t)}</div></div></div></div>`;
+}
+function periodNav(p){
+  return `<div class="row">
+    <button class="btn soft icon sm" data-a="per" data-v="-1" aria-label="Bulan sebelumnya">←</button>
+    <div class="sp center"><b>${pLabel(p)}</b></div>
+    <button class="btn soft icon sm" data-a="per" data-v="1" aria-label="Bulan berikutnya" ${p>=thisPeriod()?'disabled':''}>→</button>
+  </div>`;
+}
+
+/* ---------- pengeluaran ---------- */
+function vPengeluaran(){
+  const h = house(), p = S.period || thisPeriod();
+  const lock = locked(h,p);
+  const list = h.expenses.filter(e=>e.tanggal.slice(0,7)===p).sort((a,b)=>b.tanggal.localeCompare(a.tanggal));
+  const besar = list.filter(e=>e.besar);
+  const plan = (h.planned||[]).sort((a,b)=>a.tanggalRencana.localeCompare(b.tanggalRencana));
+  return `<div class="sec-head"><h2>Pengeluaran</h2></div>
+    ${periodNav(p)}
+    <div class="grid two mt-s">
+      <div class="card tight"><div class="tiny">Total ${pShort(p)}</div><div class="display" style="font-size:1.4rem">${egp(keluar(h,p))}</div>
+        <div class="tiny">${list.length} catatan</div></div>
+      <div class="card tight"><div class="tiny">Termasuk belanja besar</div><div class="display" style="font-size:1.4rem">${egp(besar.reduce((a,b)=>a+ +b.nominal,0))}</div>
+        <div class="tiny">${besar.length} item ditandai besar</div></div>
+    </div>
+    ${lock?'<p class="tiny mt-s">Buku periode ini ditutup. Buka kembali dari Laporan untuk mengoreksi.</p>':''}
+    <div class="card mt"><div class="list">${list.map(e=>`<div class="item">
+        <div class="body"><b>${esc(e.deskripsi)}</b><span>${dLabel(e.tanggal)} · ${esc(e.kategori)} · ${esc(e.dicatatOleh||'—')}</span></div>
+        ${e.besar?'<span class="badge big">besar</span>':''}
+        <div class="val out">−${nf.format(e.nominal)}</div>
+        <button class="btn soft sm" data-a="sheet" data-v="pengeluaran" data-id="${e.id}" ${lock?'disabled':''}>Ubah</button>
+      </div>`).join('') || '<div class="empty">Belum ada pengeluaran bulan ini.</div>'}</div></div>
+
+    <div class="sec-head"><h2>Rencana pengeluaran</h2>
+      <button class="btn ghost sm" data-a="sheet" data-v="rencana">Tambah</button></div>
+    <div class="card"><div class="list">${plan.map(x=>`<div class="item">
+        <div class="body"><b>${esc(x.deskripsi)}</b><span>rencana ${dLabel(x.tanggalRencana)} · ${x.status}</span></div>
+        <div class="val">${nf.format(x.estimasi)}</div>
+        ${x.status==='rencana'? `<button class="btn sm" data-a="sheet" data-v="realisasi" data-id="${x.id}">Realisasi</button>`
+          : `<span class="badge neutral">${x.status}</span>`}
+        <button class="btn soft sm" data-a="hapus-rencana" data-id="${x.id}" aria-label="Hapus rencana">×</button>
+      </div>`).join('') || '<div class="empty">Belum ada rencana. Catat dulu rencana beli galon, perbaikan AC, dan sejenisnya.</div>'}</div></div>
+    <button class="fab" data-a="sheet" data-v="pengeluaran">+ Catat belanja</button>`;
+}
+
+/* ---------- laporan ---------- */
+function vLaporan(){
+  const h = house(), p = S.period || thisPeriod();
+  const lock = locked(h,p);
+  const kat = {};
+  h.expenses.filter(e=>e.tanggal.slice(0,7)===p).forEach(e=>{ kat[e.kategori]=(kat[e.kategori]||0)+ +e.nominal; });
+  const rows = Object.entries(kat).sort((a,b)=>b[1]-a[1]);
+  const inn = masuk(h,p), out = keluar(h,p);
+  const awal = saldoHingga(h, pShift(p,-1)), akhir = awal + inn - out;
+  const byMember = aktif(h).map(m=>({nama:m.nama, v:paidOf(h,m.id,p), st:statusOf(h,m.id,p)}));
+  const barRows = lastPeriods(6).map(x=>({p:x, in:masuk(h,x), out:keluar(h,x)}));
+  return `<div class="sec-head"><h2>Laporan bulanan</h2></div>
+    ${periodNav(p)}
+    <div class="card mt-s" id="laporan">
+      <h3>${esc(h.nama)} — ${pLabel(p)}</h3>
+      <p class="tiny">Semua nilai dalam EGP. Dicetak ${dLabel(today())}.</p>
+      <div class="tw"><table>
+        <tbody>
+          <tr><td>Saldo awal</td><td class="n">${nf.format(awal)}</td></tr>
+          <tr><td>Iuran masuk</td><td class="n">${nf.format(inn)}</td></tr>
+          <tr><td>Pengeluaran</td><td class="n">−${nf.format(out)}</td></tr>
+          <tr class="total"><td>Saldo akhir</td><td class="n">${nf.format(akhir)}</td></tr>
+        </tbody></table></div>
+      <div class="hair"></div>
+      <h3>Pengeluaran per kategori</h3>
+      <div class="tw"><table><thead><tr><th>Kategori</th><th class="n">Nominal</th><th class="n">Porsi</th></tr></thead>
+        <tbody>${rows.map(([k,v])=>`<tr><td>${esc(k)}</td><td class="n">${nf.format(v)}</td><td class="n">${out?Math.round(v/out*100):0}%</td></tr>`).join('')
+          || '<tr><td colspan="3">Tidak ada pengeluaran.</td></tr>'}</tbody></table></div>
+      <div class="hair"></div>
+      <h3>Iuran per anggota</h3>
+      <div class="tw"><table><thead><tr><th>Anggota</th><th class="n">Dibayar</th><th>Status</th></tr></thead>
+        <tbody>${byMember.map(m=>`<tr><td>${esc(m.nama)}</td><td class="n">${nf.format(m.v)}</td><td>${m.st}</td></tr>`).join('')}</tbody></table></div>
+    </div>
+    <div class="row wrap mt noprint">
+      <button class="btn soft sm" data-a="csv">Unduh CSV</button>
+      <button class="btn soft sm" data-a="print">Cetak / simpan PDF</button>
+      <button class="btn ${lock?'gold':'soft'} sm" data-a="tutup-buku">${lock?'Buka kembali buku':'Tutup buku periode'}</button>
+    </div>
+    <div class="card mt noprint"><h3>Tren enam bulan</h3>${bars(barRows)}</div>`;
+}
+
+/* ---------- simulasi ---------- */
+function vSimulasi(){
+  const h = house();
+  const d = S.sim || { orang: aktif(h).length||6, items: (h.setting.iuranTypes||[]).map(x=>({nama:x.nama, v:+x.nominal * (aktif(h).length||6)})), mode:'maju', iuran:1500 };
+  S.sim = d;
+  const total = d.items.reduce((a,b)=>a+ (+b.v||0),0);
+  const per = d.orang? total/d.orang : 0;
+  const ok = per>=RANGE[0] && per<=RANGE[1];
+  const dana = d.iuran * d.orang;
+  return `<div class="row"><button class="btn ghost sm" data-a="tab" data-v="beranda">← Beranda</button></div>
+    <div class="sec-head"><h2>Simulasi iuran</h2></div>
+    <div class="chips">
+      <button class="chip ${d.mode==='maju'?'on':''}" data-a="sim-mode" data-v="maju">Dari pengeluaran → iuran</button>
+      <button class="chip ${d.mode==='balik'?'on':''}" data-a="sim-mode" data-v="balik">Dari iuran → dana</button>
+    </div>
+    <div class="card mt-s">
+      <label class="f"><span>Jumlah anggota yang ikut iuran</span>
+        <input type="number" min="1" max="40" value="${d.orang}" data-a="sim-orang" inputmode="numeric"></label>
+      ${d.mode==='maju'? `
+        <fieldset><legend>Estimasi pengeluaran rumah per bulan (EGP)</legend>
+          ${d.items.map((it,i)=>`<label class="f"><span>${esc(it.nama)}</span>
+            <input type="number" min="0" value="${it.v}" data-a="sim-item" data-i="${i}" inputmode="numeric"></label>`).join('')}
+          <button class="btn soft sm" data-a="sim-add">Tambah pos pengeluaran</button>
+        </fieldset>
+        <div class="tw"><table><tbody>
+          <tr><td>Total pengeluaran</td><td class="n">${nf.format(total)}</td></tr>
+          <tr><td>Jumlah anggota</td><td class="n">${d.orang} orang</td></tr>
+          <tr class="total"><td>Saran iuran per orang</td><td class="n">${nf.format(Math.ceil(per))}</td></tr>
+        </tbody></table></div>
+        <div class="card tight mt" style="background:${ok?'var(--lunas-soft)':'var(--saffron-soft)'};border-color:transparent">
+          <b>${ok?'Masih di rentang wajar':'Di luar rentang umum'}</b>
+          <p class="tiny" style="margin:4px 0 0">Rentang umum rumah mahasiswa ${nf.format(RANGE[0])}–${nf.format(RANGE[1])} EGP per orang. ${ok?'Angka ini aman dipakai sebagai kesepakatan.':'Cek ulang pos pengeluaran atau jumlah anggota sebelum disepakati.'}</p></div>
+        <button class="btn block mt" data-a="sim-pakai" data-v="${Math.ceil(per)}">Pakai sebagai nominal iuran</button>
+      ` : `
+        <label class="f"><span>Iuran per orang per bulan (EGP)</span>
+          <input type="number" min="0" value="${d.iuran}" data-a="sim-iuran" inputmode="numeric"></label>
+        <div class="tw"><table><tbody>
+          <tr><td>Dana terkumpul per bulan</td><td class="n">${nf.format(dana)}</td></tr>
+          <tr><td>Rencana pengeluaran tercatat</td><td class="n">${nf.format((h.planned||[]).filter(x=>x.status==='rencana').reduce((a,b)=>a+ +b.estimasi,0))}</td></tr>
+          <tr><td>Rata-rata pengeluaran 3 bulan</td><td class="n">${nf.format(lastPeriods(3).reduce((a,p)=>a+keluar(h,p),0)/3)}</td></tr>
+          <tr class="total"><td>Selisih vs rata-rata</td><td class="n">${nf.format(dana - lastPeriods(3).reduce((a,p)=>a+keluar(h,p),0)/3)}</td></tr>
+        </tbody></table></div>
+        <button class="btn block mt" data-a="sim-pakai" data-v="${d.iuran}">Pakai sebagai nominal iuran</button>
+      `}
+    </div>`;
+}
+
+/* ---------- anggota ---------- */
+function vAnggota(){
+  const h = house(), p = thisPeriod();
+  const grup = [['aktif','Aktif'],['cuti','Cuti / pulang kampung'],['keluar','Sudah keluar']];
+  return `<div class="row"><button class="btn ghost sm" data-a="tab" data-v="beranda">← Beranda</button></div>
+    <div class="sec-head"><h2>Anggota rumah</h2><button class="btn sm" data-a="sheet" data-v="anggota">Tambah</button></div>
+    ${grup.map(([g,label])=>{
+      const ms = h.members.filter(m=>m.status===g);
+      if(!ms.length) return '';
+      return `<div class="sec-head" style="margin:16px 0 6px"><h3>${label}</h3><span class="muted">${ms.length}</span></div>
+      <div class="card"><div class="list">${ms.map(m=>`<div class="item">
+        <div class="avatar">${initials(m.nama)}</div>
+        <div class="body"><b>${esc(m.nama)}</b><span>${m.kamar?'Kamar '+esc(m.kamar)+' · ':''}gabung ${dLabel(m.tglGabung)}${m.tglKeluar?' · keluar '+dLabel(m.tglKeluar):''}</span></div>
+        ${g!=='keluar'? `<span class="badge ${statusOf(h,m.id,p)==='lunas'?'ok':statusOf(h,m.id,p)==='sebagian'?'part':'no'}">${statusOf(h,m.id,p)}</span>`:''}
+        <button class="btn soft sm" data-a="sheet" data-v="anggota" data-id="${m.id}">Ubah</button></div>`).join('')}</div></div>`;
+    }).join('') || '<div class="empty">Belum ada anggota. Tambah nama penghuni satu per satu.</div>'}
+    <div class="sec-head"><h2>Riwayat iuran per anggota</h2></div>
+    <div class="card tight"><div class="tw"><table>
+      <thead><tr><th>Anggota</th>${lastPeriods(6).map(p=>`<th class="n">${pShort(p).split(' ')[0]}</th>`).join('')}</tr></thead>
+      <tbody>${aktif(h).map(m=>`<tr><td>${esc(m.nama)}</td>${lastPeriods(6).map(p=>{
+        const st=statusOf(h,m.id,p);
+        return `<td class="n">${st==='belum'?'—':nf.format(paidOf(h,m.id,p))}</td>`;}).join('')}</tr>`).join('')}</tbody>
+    </table></div></div>`;
+}
+
+/* ---------- peraturan & jenis iuran ---------- */
+function vPeraturan(){
+  const h = house(), rs = (h.rules||[]).slice().sort((a,b)=>a.urutan-b.urutan);
+  return `<div class="row"><button class="btn ghost sm" data-a="tab" data-v="setting">← Setting</button></div>
+    <div class="sec-head"><h2>Peraturan rumah</h2><button class="btn sm" data-a="sheet" data-v="peraturan">Tambah</button></div>
+    <p class="muted">Peraturan aktif muncul sebagai pengingat saat app dibuka. Tidak ada nominal denda di Igarin — ini catatan kesepakatan, bukan alat sanksi.</p>
+    <div class="card mt-s"><div class="list">${rs.map((r,i)=>`<div class="item">
+        <span style="width:24px;height:24px;border-radius:7px;background:var(--saffron-soft);color:var(--sebagian);display:grid;place-items:center;font-size:.72rem;font-weight:700;flex:0 0 auto">${i+1}</span>
+        <div class="body"><b style="white-space:normal">${esc(r.teks)}</b><span>${r.aktif?'ditampilkan di popup':'disimpan, tidak ditampilkan'}</span></div>
+        <button class="btn soft sm" data-a="rule-move" data-id="${r.id}" data-v="-1" aria-label="Naikkan urutan">↑</button>
+        <button class="btn soft sm" data-a="rule-move" data-id="${r.id}" data-v="1" aria-label="Turunkan urutan">↓</button>
+        <button class="btn soft sm" data-a="sheet" data-v="peraturan" data-id="${r.id}">Ubah</button>
+      </div>`).join('') || '<div class="empty">Belum ada peraturan. Contoh: dilarang merokok di dalam rumah, tamu menginap maksimal 3 hari dengan izin bersama.</div>'}</div></div>
+    <div class="card mt">
+      <label class="f"><span>Frekuensi popup pengingat</span>
+        <select data-a="set-popup">
+          <option value="harian" ${h.setting.popupFreq==='harian'?'selected':''}>Sekali sehari</option>
+          <option value="setiap" ${h.setting.popupFreq==='setiap'?'selected':''}>Setiap kali app dibuka</option>
+          <option value="mati" ${h.setting.popupFreq==='mati'?'selected':''}>Jangan tampilkan</option>
+        </select></label>
+    </div>`;
+}
+function vJenisIuran(){
+  const h = house(), t = tagihan(h);
+  return `<div class="row"><button class="btn ghost sm" data-a="tab" data-v="iuran">← Iuran</button></div>
+    <div class="sec-head"><h2>Jenis & nominal iuran</h2><button class="btn sm" data-a="sheet" data-v="jenis">Tambah</button></div>
+    <p class="muted">Nominal per orang per bulan. Totalnya jadi tagihan tiap anggota di papan status.</p>
+    <div class="card mt-s"><div class="list">${(h.setting.iuranTypes||[]).map(x=>`<div class="item">
+      <div class="body"><b>${esc(x.nama)}</b></div>
+      <div class="val">${nf.format(x.nominal)}</div>
+      <button class="btn soft sm" data-a="sheet" data-v="jenis" data-id="${x.id}">Ubah</button></div>`).join('')
+      || '<div class="empty">Belum ada jenis iuran.</div>'}
+      <div class="item"><div class="body"><b>Total per orang</b></div><div class="val">${nf.format(t)}</div></div></div></div>
+    ${t && (t<RANGE[0]||t>RANGE[1]) ? `<p class="tiny mt-s">Total ${nf.format(t)} EGP di luar rentang umum ${nf.format(RANGE[0])}–${nf.format(RANGE[1])} EGP. Bukan larangan, cuma penanda.</p>`:''}`;
+}
+
+/* ---------- setting ---------- */
+function vSetting(){
+  const h = house();
+  return `<div class="sec-head"><h2>Setting rumah</h2></div>
+    <div class="card">
+      <label class="f"><span>Nama rumah</span><input value="${esc(h.nama)}" data-a="set-nama"></label>
+      <label class="f"><span>Kontak WhatsApp <span class="hint">dipakai bila password rumah hilang</span></span>
+        <input value="${esc(h.kontak||'')}" data-a="set-kontak" inputmode="tel"></label>
+      <label class="f"><span>Waktu iuran dikumpulkan</span>
+        <select data-a="set-waktu">
+          <option value="awal" ${h.setting.waktuPenagihan==='awal'?'selected':''}>Awal bulan</option>
+          <option value="akhir" ${h.setting.waktuPenagihan==='akhir'?'selected':''}>Akhir bulan</option>
+        </select></label>
+      <label class="f"><span>Saldo kas awal saat mulai pakai Igarin (EGP)</span>
+        <input type="number" value="${+h.setting.saldoAwal||0}" data-a="set-saldo" inputmode="numeric"></label>
+    </div>
+    <div class="sec-head"><h2>Isi rumah</h2></div>
+    <div class="card"><div class="list">
+      <button class="item" style="background:none;border-left:0;border-right:0;border-top:0;width:100%;text-align:left;cursor:pointer" data-a="page" data-v="peraturan">
+        <div class="body"><b>Peraturan rumah</b><span>${(h.rules||[]).filter(r=>r.aktif).length} peraturan aktif · popup ${h.setting.popupFreq==='mati'?'nonaktif':h.setting.popupFreq}</span></div><span>›</span></button>
+      <button class="item" style="background:none;border-left:0;border-right:0;border-top:0;width:100%;text-align:left;cursor:pointer" data-a="page" data-v="jenis-iuran">
+        <div class="body"><b>Jenis & nominal iuran</b><span>${(h.setting.iuranTypes||[]).length} jenis · total ${egp(tagihan(h))} per orang</span></div><span>›</span></button>
+      <button class="item" style="background:none;border-left:0;border-right:0;border-top:0;width:100%;text-align:left;cursor:pointer" data-a="page" data-v="anggota">
+        <div class="body"><b>Anggota rumah</b><span>${aktif(h).length} aktif dari ${h.members.length} terdaftar</span></div><span>›</span></button>
+      <button class="item" style="background:none;border:0;width:100%;text-align:left;cursor:pointer" data-a="page" data-v="log">
+        <div class="body"><b>Riwayat input</b><span>${(h.log||[]).length} aktivitas tercatat</span></div><span>›</span></button>
+    </div></div>
+    <div class="sec-head"><h2>Kategori pengeluaran</h2></div>
+    <div class="card"><div class="row wrap">${(h.setting.kategori||[]).map(k=>`<span class="chip" style="cursor:default">${esc(k)}
+      <button class="x" style="min-width:20px;min-height:20px;font-size:1rem" data-a="kat-hapus" data-v="${esc(k)}" aria-label="Hapus kategori ${esc(k)}">×</button></span>`).join('')}</div>
+      <div class="row mt"><input id="kat-baru" placeholder="Kategori baru" class="sp"><button class="btn sm" data-a="kat-tambah">Tambah</button></div></div>
+    <div class="sec-head"><h2>Akun rumah</h2></div>
+    <div class="card">
+      <p class="muted">Username <b>${esc(h.auth.username)}</b> dipakai bersama seluruh penghuni. Karena itu setiap catatan wajib mencantumkan nama pencatat.</p>
+      <button class="btn soft block mt-s" data-a="sheet" data-v="ganti-pass">Ganti password rumah</button>
+      <button class="btn ghost block mt-s" data-a="keluar">Keluar dari akun</button>
+    </div>
+    <p class="tiny center mt">Igarin · kode aktivasi ${esc(h.kodeAktivasi)} · aktif sejak ${dLabel(h.tanggalAktivasi)}</p>`;
+}
+
+/* ---------- log ---------- */
+function vLog(){
+  const h = house();
+  return `<div class="row"><button class="btn ghost sm" data-a="tab" data-v="beranda">← Beranda</button></div>
+    <div class="sec-head"><h2>Riwayat input</h2></div>
+    <p class="muted">Jejak siapa mencatat apa. Gunanya untuk menelusuri kalau ada angka yang aneh — bukan untuk mengunci siapa pun.</p>
+    <div class="card mt-s"><div class="list">${(h.log||[]).slice(0,80).map(l=>`<div class="item">
+      <div class="body"><b>${esc(l.aksi)}</b><span>${esc(l.nama)} · ${new Date(l.ts).toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'})}</span></div>
+      <span class="badge neutral">${esc(l.tabel)}</span></div>`).join('') || '<div class="empty">Belum ada aktivitas.</div>'}</div></div>`;
+}
+
+/* =====================================================================
+   SHEET / FORM
+   ===================================================================== */
+function memberSelect(sel){
+  const h = house();
+  const opts = aktif(h).map(m=>`<option value="${esc(m.nama)}" ${sel===m.nama?'selected':''}>${esc(m.nama)}</option>`).join('');
+  return `<label class="f"><span>Dicatat oleh <span class="hint">wajib, karena akun dipakai bersama</span></span>
+    <select id="by"><option value="">— pilih nama —</option>${opts}</select></label>`;
+}
+function katSelect(sel){
+  const h = house();
+  return `<label class="f"><span>Kategori</span><select id="kategori">
+    ${(h.setting.kategori||[]).map(k=>`<option ${sel===k?'selected':''}>${esc(k)}</option>`).join('')}</select></label>`;
+}
+function sheet(title, body, foot){
+  return `<div class="scrim" data-a="close-scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+    <div class="grab"></div>
+    <div class="sheet-head"><h2>${esc(title)}</h2><button class="x" data-a="close" aria-label="Tutup">×</button></div>
+    ${body}${foot||''}</div></div>`;
+}
+function renderLayer(){
+  const L = document.getElementById('layer');
+  const h = house();
+  if(S.rulesPopup && h){
+    const rs = (h.rules||[]).filter(r=>r.aktif).sort((a,b)=>a.urutan-b.urutan);
+    L.innerHTML = sheet('Peraturan rumah', `
+      <p class="muted">Kesepakatan bersama penghuni ${esc(h.nama)}.</p>
+      <div class="card">${rs.map((r,i)=>`<div class="rule"><span class="no">${i+1}</span><div>${esc(r.teks)}</div></div>`).join('')}</div>
+      <button class="btn block mt" data-a="rules-ok">Mengerti</button>`);
+    return;
+  }
+  if(!S.sheet){ L.innerHTML=''; return; }
+  const {name, id} = S.sheet;
+  const p = S.period || thisPeriod();
+  if(name==='pilih-catat'){
+    L.innerHTML = sheet('Mau catat apa?', `
+      <button class="btn block" data-a="sheet" data-v="bayar">Iuran masuk dari anggota</button>
+      <button class="btn soft block mt-s" data-a="sheet" data-v="pengeluaran">Pengeluaran rumah</button>
+      <button class="btn soft block mt-s" data-a="sheet" data-v="rencana">Rencana pengeluaran</button>`);
+  }
+  else if(name==='bayar'){
+    const t = tagihan(h);
+    const m = id ? h.members.find(x=>x.id===id) : null;
+    const paid = m? paidOf(h,m.id,p) : 0;
+    const riwayat = m? h.payments.filter(x=>x.memberId===m.id&&x.period===p) : [];
+    L.innerHTML = sheet('Catat iuran masuk', `
+      ${locked(h,p)? '<p class="err">Buku bulan ini ditutup. Buka kembali dari Laporan sebelum menambah catatan.</p>':''}
+      <label class="f"><span>Anggota</span><select id="member">
+        ${aktif(h).map(x=>`<option value="${x.id}" ${m&&m.id===x.id?'selected':''}>${esc(x.nama)}</option>`).join('')}</select></label>
+      <label class="f"><span>Periode iuran</span><select id="period">
+        ${lastPeriods(6).slice().reverse().map(x=>`<option value="${x}" ${x===p?'selected':''}>${pLabel(x)}</option>`).join('')}</select></label>
+      <label class="f"><span>Jumlah dibayar (EGP) <span class="hint">tagihan ${nf.format(t)}${paid?`, sudah masuk ${nf.format(paid)}`:''}</span></span>
+        <input id="nominal" type="number" inputmode="numeric" value="${Math.max(0,t-paid)||t}"></label>
+      <label class="f"><span>Tanggal bayar</span><input id="tanggal" type="date" value="${today()}"></label>
+      ${memberSelect(S.lastBy)}
+      <div id="err-f" class="err" hidden></div>
+      <button class="btn block" data-a="sv-bayar">Simpan catatan</button>
+      ${riwayat.length? `<div class="sec-head"><h3>Sudah tercatat ${pShort(p)}</h3></div><div class="list">${riwayat.map(x=>`<div class="item">
+        <div class="body"><b>${nf.format(x.nominal)} EGP</b><span>${dLabel(x.tanggal)} · ${esc(x.dicatatOleh)}</span></div>
+        <button class="btn soft sm" data-a="del-bayar" data-id="${x.id}">Hapus</button></div>`).join('')}</div>`:''}`);
+  }
+  else if(name==='pengeluaran'){
+    const e = id ? h.expenses.find(x=>x.id===id) : null;
+    L.innerHTML = sheet(e?'Ubah pengeluaran':'Catat pengeluaran', `
+      <label class="f"><span>Tanggal</span><input id="tanggal" type="date" value="${e?e.tanggal:today()}"></label>
+      ${katSelect(e?e.kategori:null)}
+      <label class="f"><span>Untuk apa</span><input id="deskripsi" value="${e?esc(e.deskripsi):''}" placeholder="Beras 10 kg + minyak"></label>
+      <label class="f"><span>Nominal (EGP)</span><input id="nominal" type="number" inputmode="numeric" value="${e?e.nominal:''}"></label>
+      <label class="check"><input type="checkbox" id="besar" ${e&&e.besar?'checked':''}> Tandai sebagai pengeluaran besar / tidak rutin</label>
+      <label class="f"><span>Link bukti <span class="hint">opsional</span></span><input id="bukti" value="${e?esc(e.bukti||''):''}" placeholder="link foto struk"></label>
+      ${memberSelect(e?e.dicatatOleh:S.lastBy)}
+      <div id="err-f" class="err" hidden></div>
+      <button class="btn block" data-a="sv-pengeluaran" data-id="${e?e.id:''}">${e?'Simpan perubahan':'Simpan pengeluaran'}</button>
+      ${e? `<button class="btn warn block mt-s" data-a="del-pengeluaran" data-id="${e.id}">Hapus catatan ini</button>`:''}`);
+  }
+  else if(name==='rencana'){
+    L.innerHTML = sheet('Rencana pengeluaran', `
+      <p class="muted">Catat dulu rencananya, ubah jadi realisasi saat uangnya benar-benar keluar.</p>
+      <label class="f"><span>Perkiraan tanggal</span><input id="tanggal" type="date" value="${today()}"></label>
+      <label class="f"><span>Untuk apa</span><input id="deskripsi" placeholder="Servis AC kamar depan"></label>
+      <label class="f"><span>Estimasi nominal (EGP)</span><input id="nominal" type="number" inputmode="numeric"></label>
+      ${memberSelect(S.lastBy)}
+      <div id="err-f" class="err" hidden></div>
+      <button class="btn block" data-a="sv-rencana">Simpan rencana</button>`);
+  }
+  else if(name==='realisasi'){
+    const pl = (h.planned||[]).find(x=>x.id===id) || {};
+    L.innerHTML = sheet('Realisasi rencana', `
+      <p class="muted">${esc(pl.deskripsi||'')} — estimasi ${nf.format(pl.estimasi||0)} EGP.</p>
+      <label class="f"><span>Tanggal keluar uang</span><input id="tanggal" type="date" value="${today()}"></label>
+      ${katSelect(null)}
+      <label class="f"><span>Nominal sebenarnya (EGP)</span><input id="nominal" type="number" inputmode="numeric" value="${pl.estimasi||''}"></label>
+      <label class="check"><input type="checkbox" id="besar" checked> Tandai sebagai pengeluaran besar</label>
+      ${memberSelect(S.lastBy)}
+      <div id="err-f" class="err" hidden></div>
+      <button class="btn block" data-a="sv-realisasi" data-id="${id}">Catat sebagai pengeluaran</button>`);
+  }
+  else if(name==='anggota'){
+    const m = id ? h.members.find(x=>x.id===id) : null;
+    const bisaHapus = m && !h.payments.some(x=>x.memberId===m.id);
+    L.innerHTML = sheet(m?'Ubah anggota':'Tambah anggota', `
+      <label class="f"><span>Nama</span><input id="nama" value="${m?esc(m.nama):''}" placeholder="Nama panggilan juga boleh"></label>
+      <label class="f"><span>Nomor kamar <span class="hint">opsional</span></span><input id="kamar" value="${m?esc(m.kamar||''):''}"></label>
+      <label class="f"><span>Status</span><select id="status">
+        ${[['aktif','Aktif'],['cuti','Cuti / pulang kampung'],['keluar','Sudah keluar']].map(([v,l])=>`<option value="${v}" ${m&&m.status===v?'selected':''}>${l}</option>`).join('')}</select></label>
+      <label class="f"><span>Tanggal gabung</span><input id="gabung" type="date" value="${m?m.tglGabung:today()}"></label>
+      <label class="f"><span>Tanggal keluar <span class="hint">isi bila sudah keluar</span></span><input id="keluar" type="date" value="${m&&m.tglKeluar?m.tglKeluar:''}"></label>
+      ${memberSelect(S.lastBy)}
+      <div id="err-f" class="err" hidden></div>
+      <button class="btn block" data-a="sv-anggota" data-id="${m?m.id:''}">${m?'Simpan perubahan':'Tambah anggota'}</button>
+      ${bisaHapus? `<button class="btn warn block mt-s" data-a="del-anggota" data-id="${m.id}">Hapus dari daftar</button>`:''}
+      ${m&&!bisaHapus? '<p class="tiny mt-s">Anggota ini punya riwayat iuran, jadi tidak bisa dihapus. Ubah statusnya jadi “sudah keluar” supaya riwayatnya tetap utuh.</p>':''}`);
+  }
+  else if(name==='peraturan'){
+    const r = id ? h.rules.find(x=>x.id===id) : null;
+    L.innerHTML = sheet(r?'Ubah peraturan':'Tambah peraturan', `
+      <label class="f"><span>Isi peraturan</span><textarea id="teks" placeholder="Piket dapur sesuai jadwal, telat piket ganti hari berikutnya">${r?esc(r.teks):''}</textarea></label>
+      <label class="check"><input type="checkbox" id="aktif" ${!r||r.aktif?'checked':''}> Tampilkan di popup pengingat</label>
+      ${memberSelect(S.lastBy)}
+      <div id="err-f" class="err" hidden></div>
+      <button class="btn block" data-a="sv-peraturan" data-id="${r?r.id:''}">Simpan</button>
+      ${r? `<button class="btn warn block mt-s" data-a="del-peraturan" data-id="${r.id}">Hapus peraturan</button>`:''}
+      <p class="tiny mt-s">Igarin tidak menyediakan kolom denda. Peraturan di sini murni pengingat kesepakatan.</p>`);
+  }
+  else if(name==='jenis'){
+    const j = id ? (h.setting.iuranTypes||[]).find(x=>x.id===id) : null;
+    L.innerHTML = sheet(j?'Ubah jenis iuran':'Tambah jenis iuran', `
+      <label class="f"><span>Nama iuran</span><input id="nama" value="${j?esc(j.nama):''}" placeholder="Dapur"></label>
+      <label class="f"><span>Nominal per orang per bulan (EGP)</span><input id="nominal" type="number" inputmode="numeric" value="${j?j.nominal:''}"></label>
+      ${memberSelect(S.lastBy)}
+      <div id="err-f" class="err" hidden></div>
+      <button class="btn block" data-a="sv-jenis" data-id="${j?j.id:''}">Simpan</button>
+      ${j? `<button class="btn warn block mt-s" data-a="del-jenis" data-id="${j.id}">Hapus jenis ini</button>`:''}`);
+  }
+  else if(name==='ganti-pass'){
+    L.innerHTML = sheet('Ganti password rumah', `
+      <label class="f"><span>Password lama</span><input id="p0" type="password"></label>
+      <label class="f"><span>Password baru <span class="hint">minimal 6 karakter</span></span><input id="p1" type="password"></label>
+      <label class="f"><span>Ulangi password baru</span><input id="p2" type="password"></label>
+      <div id="err-f" class="err" hidden></div>
+      <button class="btn block" data-a="sv-pass">Ganti password</button>
+      <p class="tiny mt-s">Beri tahu seluruh penghuni setelah diganti, karena akunnya dipakai bersama.</p>`);
+  }
+  else if(name==='own-sale'){
+    const free = DB.codes.filter(c=>c.status==='tersedia').slice(0,50);
+    L.innerHTML = sheet('Catat penjualan', `
+      <label class="f"><span>Nama rumah / pembeli</span><input id="nama"></label>
+      <label class="f"><span>Kontak</span><input id="kontak" placeholder="WhatsApp atau email"></label>
+      <label class="f"><span>Kode yang dikirim</span><select id="kode">${free.map(c=>`<option>${c.kode}</option>`).join('')}</select></label>
+      <label class="f"><span>Nominal diterima (IDR)</span><input id="nominal" type="number" value="${HARGA_IDR}"></label>
+      <div id="err-f" class="err" hidden></div>
+      <button class="btn block" data-a="sv-sale">Simpan</button>
+      <p class="tiny mt-s">Bukti transfer tetap ditangani di luar app (WhatsApp/email), tidak disimpan di database.</p>`);
+  }
+  const first = document.querySelector('.sheet input, .sheet select, .sheet textarea');
+  if(first) first.focus({preventScroll:true});
+}
+
+/* =====================================================================
+   ROUTER
+   ===================================================================== */
+function render(){
+  const app = document.getElementById('app');
+  if(S.route==='landing') app.innerHTML = vLanding();
+  else if(S.route==='aktivasi') app.innerHTML = vAktivasi();
+  else if(S.route==='masuk') app.innerHTML = vMasuk();
+  else if(S.route==='owner') app.innerHTML = vOwner();
+  else if(S.route==='app'){
+    if(!house()){ S.route='landing'; return render(); }
+    let inner = '';
+    if(S.page==='anggota') inner = vAnggota();
+    else if(S.page==='simulasi') inner = vSimulasi();
+    else if(S.page==='log') inner = vLog();
+    else if(S.page==='peraturan') inner = vPeraturan();
+    else if(S.page==='jenis-iuran') inner = vJenisIuran();
+    else if(S.tab==='iuran') inner = vIuran();
+    else if(S.tab==='pengeluaran') inner = vPengeluaran();
+    else if(S.tab==='laporan') inner = vLaporan();
+    else if(S.tab==='setting') inner = vSetting();
+    else inner = vBeranda();
+    app.innerHTML = chrome(inner);
+  }
+  renderLayer();
+}
+function go(route){ S.route=route; S.page=null; S.sheet=null; window.scrollTo(0,0); render(); }
+function openTab(t){ S.tab=t; S.page=null; S.sheet=null; S.period=null; window.scrollTo(0,0); render(); }
+function closeSheet(){ S.sheet=null; renderLayer(); }
+function ferr(msg){
+  const e = document.getElementById('err-f');
+  if(e){ e.textContent=msg; e.hidden=false; } else toast(msg);
+}
+const val = id => { const el=document.getElementById(id); return el? el.value.trim() : ''; };
+const num = id => { const v=parseFloat(val(id)); return isNaN(v)?0:v; };
+const chk = id => { const el=document.getElementById(id); return !!(el&&el.checked); };
+function needBy(){
+  const by = val('by');
+  if(!by){ ferr('Pilih dulu nama pencatat. Semua catatan harus ada penanggung jawabnya.'); return null; }
+  S.lastBy = by; return by;
+}
+function maybePopup(){
+  const h = house(); if(!h) return;
+  const rs = (h.rules||[]).filter(r=>r.aktif);
+  const f = h.setting.popupFreq;
+  if(!rs.length || f==='mati') return;
+  if(f==='harian' && DB.session.rulesSeen === today()) return;
+  DB.session.rulesSeen = today();
+  S.rulesPopup = true;
+}
+
+/* ---------- data rumah baru ---------- */
+function newHouse(kode, nama, kontak, username, passHash){
+  const id = uid();
+  DB.houses[id] = {
+    id, nama, kontak, kodeAktivasi:kode, tanggalAktivasi:today(), status:'aktif',
+    auth:{username, passHash},
+    setting:{ waktuPenagihan:'awal', popupFreq:'harian', saldoAwal:0,
+      kategori:KAT_DEFAULT.slice(), iuranTypes:IURAN_DEFAULT.map(x=>({...x})) },
+    members:[], payments:[], expenses:[], planned:[], rules:[], log:[], closed:[]
+  };
+  const c = DB.codes.find(x=>x.kode===kode);
+  if(c){ c.status='terpakai'; c.houseId=id; c.tglTerpakai=today(); }
+  DB.session.houseId = id;
+  return DB.houses[id];
+}
+
+/* ---------- rumah contoh ---------- */
+function seedDemo(){
+  const c = DB.codes.find(x=>x.status==='tersedia');
+  const h = newHouse(c.kode, 'Rumah Hay El-Asher 12', '+20 10 2233 4455', 'demo', 'plain$demo');
+  h.setting.saldoAwal = 1800;
+  const nama = ['Fikri','Ahmad Ridwan','Naufal','Hilmi','Zaki','Bagas'];
+  h.members = nama.map((n,i)=>({ id:uid(), nama:n, kamar:String(Math.ceil((i+1)/2)),
+    status: i===5?'cuti':'aktif', tglGabung:'2025-09-01', tglKeluar:null }));
+  h.setting.iuranTypes = IURAN_DEFAULT.map(x=>({...x}));
+  const t = tagihan(h);
+  const per = lastPeriods(3);
+  per.forEach((p, pi)=>{
+    h.members.forEach((m,mi)=>{
+      const skip = (pi===2 && (mi===2 || mi===5));
+      const sebagian = (pi===2 && mi===3);
+      if(skip) return;
+      h.payments.push({ id:uid(), memberId:m.id, period:p,
+        nominal: sebagian? Math.round(t*0.6) : t,
+        status:'lunas', tanggal: p+'-0'+((mi%5)+2), dicatatOleh: nama[(mi+1)%4] });
+    });
+  });
+  const belanja = [
+    ['Dapur','Beras 10 kg + minyak',520],['Dapur','Sayur & ayam pasar',380],['Dapur','Gula, teh, telur',240],
+    ['Listrik','Bayar kahraba',870],['Air','Tagihan air',310],['Gas','Isi tabung gas',260],
+    ['Internet','Wifi bulanan',400],['Kebersihan','Sabun, pembersih lantai',150],
+    ['Sewa','Ijar bulanan ke pemilik',4500],['Lain-lain','Ongkos taksi angkut barang',120]
+  ];
+  per.forEach((p, pi)=>{
+    belanja.forEach((b,i)=>{
+      if(pi===2 && i>6) return;
+      h.expenses.push({ id:uid(), tanggal:p+'-'+String(3+((i*2)%24)).padStart(2,'0'),
+        kategori:b[0], deskripsi:b[1], nominal: Math.round(b[2]*(0.9+((i+pi)%4)*0.06)),
+        besar:false, dicatatOleh:nama[i%5], bukti:'' });
+    });
+  });
+  h.expenses.push({id:uid(), tanggal:per[1]+'-18', kategori:'Lain-lain', deskripsi:'Servis AC ruang tengah', nominal:1450, besar:true, dicatatOleh:'Hilmi', bukti:''});
+  h.expenses.push({id:uid(), tanggal:per[2]+'-06', kategori:'Dapur', deskripsi:'Beli dispenser + galon', nominal:980, besar:true, dicatatOleh:'Fikri', bukti:''});
+  h.planned = [
+    {id:uid(), tanggalRencana: pShift(thisPeriod(),1)+'-05', deskripsi:'Ganti kasur kamar 3', estimasi:1200, status:'rencana'},
+    {id:uid(), tanggalRencana: pShift(thisPeriod(),1)+'-20', deskripsi:'Cat ulang dapur', estimasi:800, status:'rencana'}
+  ];
+  h.rules = [
+    'Dilarang merokok di dalam rumah, silakan di balkon.',
+    'Tamu menginap maksimal 3 hari, izin dulu ke grup rumah.',
+    'Piket dapur sesuai jadwal, cuci alat masak setelah dipakai.',
+    'Uang kas hanya dipakai untuk kebutuhan rumah, catat di app hari itu juga.',
+    'Lampu dan AC dimatikan kalau kamar kosong.'
+  ].map((teks,i)=>({id:uid(), teks, urutan:i+1, aktif:true}));
+  h.log = [{id:uid(), nama:'Fikri', aksi:'Membuka rumah contoh', tabel:'houses', ts:new Date().toISOString()}];
+  DB.sales.push({nama:h.nama, kontak:h.kontak, kode:h.kodeAktivasi, nominal:HARGA_IDR, tanggal:today()});
+}
+
+/* =====================================================================
+   AKSI
+   ===================================================================== */
+document.addEventListener('click', async (ev)=>{
+  const el = ev.target.closest('[data-a]');
+  if(!el) return;
+  const a = el.dataset.a, v = el.dataset.v, id = el.dataset.id;
+  const h = house();
+
+  if(a==='close-scrim' && ev.target !== el) return;
+  switch(a){
+    case 'go': go(v); return;
+    case 'close': case 'close-scrim': closeSheet(); return;
+    case 'tab': openTab(v); return;
+    case 'page': S.page=v; S.sheet=null; window.scrollTo(0,0); render(); return;
+    case 'per': S.period = pShift(S.period||thisPeriod(), +v); render(); return;
+    case 'sheet': S.sheet={name:v, id:id||null}; renderLayer(); return;
+    case 'rules-ok': S.rulesPopup=false; renderLayer(); save(); return;
+    case 'keluar': DB.session.houseId=null; await save(); go('landing'); return;
+
+    case 'demo': {
+      const ada = Object.values(DB.houses).find(x=>x.auth.username==='demo');
+      if(ada) DB.session.houseId = ada.id; else seedDemo();
+      await save(); S.route='app'; S.tab='beranda'; maybePopup(); render(); return;
+    }
+    case 'aktivasi': {
+      const kode = val('kode'), nama = val('nama'), kontak = val('kontak'), u = val('user'), p1 = val('pass'), p2 = val('pass2');
+      const e = document.getElementById('err-kode');
+      const show = m => { e.textContent=m; e.hidden=false; };
+      e.hidden = true;
+      const c = DB.codes.find(x=>x.kode===kode);
+      if(!/^\d{9}$/.test(kode)) return show('Kode harus 9 angka.');
+      if(!c || c.status!=='tersedia') return show('Kode tidak ditemukan atau sudah terpakai. Hubungi admin.');
+      if(!nama) return show('Isi nama rumah.');
+      if(!u || u.length<3) return show('Username minimal 3 karakter.');
+      if(Object.values(DB.houses).some(x=>x.auth.username===u)) return show('Username sudah dipakai rumah lain.');
+      if(p1.length<6) return show('Password minimal 6 karakter.');
+      if(p1!==p2) return show('Dua password belum sama.');
+      newHouse(kode, nama, kontak, u, await sha(p1));
+      DB.sales.push({nama, kontak, kode, nominal:HARGA_IDR, tanggal:today()});
+      await save();
+      S.route='app'; S.tab='setting'; render();
+      toast('Rumah aktif. Lanjut isi anggota dan nominal iuran.');
+      return;
+    }
+    case 'masuk': {
+      const u = val('user'), p = val('pass');
+      const e = document.getElementById('err-login'); e.hidden=true;
+      const hh = Object.values(DB.houses).find(x=>x.auth.username===u);
+      const ok = hh && (hh.auth.passHash === await sha(p) || hh.auth.passHash === 'plain$'+p);
+      if(!ok){ e.textContent='Username atau password salah.'; e.hidden=false; return; }
+      DB.session.houseId = hh.id; await save();
+      S.route='app'; S.tab='beranda'; maybePopup(); render(); return;
+    }
+
+    /* ---- panel pemilik ---- */
+    case 'owner-unlock': {
+      if(val('ownpass')!==OWNER_PASS){ const e=document.getElementById('err-own'); e.textContent='Sandi salah.'; e.hidden=false; return; }
+      DB.ownerUnlocked = true; await save(); render(); return;
+    }
+    case 'own-filter': S.filter=v; render(); return;
+    case 'own-batch': {
+      const batch = Math.max(...DB.codes.map(c=>c.batch)) + 1;
+      const baru = genCodes(100).map(c=>({...c, batch}));
+      DB.codes = DB.codes.concat(baru); await save(); render();
+      toast('100 kode batch ' + batch + ' ditambahkan.'); return;
+    }
+    case 'own-csv': {
+      const rows = [['kode','status','rumah','tanggal_terpakai','batch']].concat(
+        DB.codes.map(c=>[c.kode, c.status, c.houseId&&DB.houses[c.houseId]?DB.houses[c.houseId].nama:'', c.tglTerpakai||'', c.batch]));
+      unduh('igarin-kode.csv', rows.map(r=>r.join(',')).join('\n')); return;
+    }
+    case 'own-sale': S.sheet={name:'own-sale'}; renderLayer(); return;
+    case 'sv-sale': {
+      const nama=val('nama'); if(!nama) return ferr('Isi nama pembeli.');
+      const kode=val('kode');
+      DB.sales.push({nama, kontak:val('kontak'), kode, nominal:num('nominal'), tanggal:today()});
+      const c = DB.codes.find(x=>x.kode===kode);
+      if(c){ c.status='terpakai'; c.tglTerpakai=today(); }
+      await save(); closeSheet(); render(); toast('Penjualan dicatat. Kirim kode ' + kode + ' ke pembeli.'); return;
+    }
+
+    /* ---- iuran ---- */
+    case 'sv-bayar': {
+      const p = val('period');
+      if(locked(h,p)) return ferr('Buku periode itu ditutup.');
+      const by = needBy(); if(!by) return;
+      const mid = val('member'); if(!mid) return ferr('Pilih anggota.');
+      const n = num('nominal'); if(n<=0) return ferr('Nominal harus lebih dari 0.');
+      h.payments.push({id:uid(), memberId:mid, period:p, nominal:n, status:'lunas', tanggal:val('tanggal')||today(), dicatatOleh:by});
+      const m = h.members.find(x=>x.id===mid);
+      logAct(by, `Catat iuran ${m?m.nama:''} ${pShort(p)} ${nf.format(n)} EGP`, 'payments');
+      await save(); closeSheet(); render(); toast('Iuran tercatat.'); return;
+    }
+    case 'del-bayar': {
+      const rec = h.payments.find(x=>x.id===id);
+      h.payments = h.payments.filter(x=>x.id!==id);
+      logAct(S.lastBy||'—', `Hapus catatan iuran ${nf.format(rec?rec.nominal:0)} EGP`, 'payments');
+      await save(); closeSheet(); render(); toast('Catatan dihapus.'); return;
+    }
+
+    /* ---- pengeluaran ---- */
+    case 'sv-pengeluaran': {
+      const tgl = val('tanggal')||today();
+      if(locked(h, tgl.slice(0,7))) return ferr('Buku periode itu ditutup.');
+      const by = needBy(); if(!by) return;
+      const d = val('deskripsi'); if(!d) return ferr('Tulis pengeluaran ini untuk apa.');
+      const n = num('nominal'); if(n<=0) return ferr('Nominal harus lebih dari 0.');
+      const data = {tanggal:tgl, kategori:val('kategori'), deskripsi:d, nominal:n, besar:chk('besar'), dicatatOleh:by, bukti:val('bukti')};
+      if(id){ Object.assign(h.expenses.find(x=>x.id===id), data); logAct(by, `Ubah pengeluaran ${d}`, 'expenses'); }
+      else { h.expenses.push({id:uid(), ...data}); logAct(by, `Catat pengeluaran ${d} ${nf.format(n)} EGP`, 'expenses'); }
+      await save(); closeSheet(); render(); toast('Pengeluaran tersimpan.'); return;
+    }
+    case 'del-pengeluaran': {
+      const rec = h.expenses.find(x=>x.id===id);
+      h.expenses = h.expenses.filter(x=>x.id!==id);
+      logAct(S.lastBy||'—', `Hapus pengeluaran ${rec?rec.deskripsi:''}`, 'expenses');
+      await save(); closeSheet(); render(); toast('Catatan dihapus.'); return;
+    }
+    case 'sv-rencana': {
+      const by = needBy(); if(!by) return;
+      const d = val('deskripsi'); if(!d) return ferr('Tulis rencananya.');
+      h.planned.push({id:uid(), tanggalRencana:val('tanggal')||today(), deskripsi:d, estimasi:num('nominal'), status:'rencana'});
+      logAct(by, `Tambah rencana ${d}`, 'planned_expenses');
+      await save(); closeSheet(); render(); toast('Rencana dicatat.'); return;
+    }
+    case 'sv-realisasi': {
+      const by = needBy(); if(!by) return;
+      const pl = h.planned.find(x=>x.id===id);
+      const tgl = val('tanggal')||today();
+      if(locked(h, tgl.slice(0,7))) return ferr('Buku periode itu ditutup.');
+      h.expenses.push({id:uid(), tanggal:tgl, kategori:val('kategori'), deskripsi:pl.deskripsi, nominal:num('nominal'), besar:chk('besar'), dicatatOleh:by, bukti:''});
+      pl.status='selesai';
+      logAct(by, `Realisasi rencana ${pl.deskripsi}`, 'expenses');
+      await save(); closeSheet(); render(); toast('Rencana jadi pengeluaran.'); return;
+    }
+    case 'hapus-rencana': {
+      h.planned = h.planned.filter(x=>x.id!==id);
+      logAct(S.lastBy||'—','Hapus rencana pengeluaran','planned_expenses');
+      await save(); render(); return;
+    }
+
+    /* ---- anggota ---- */
+    case 'sv-anggota': {
+      const by = needBy(); if(!by) return;
+      const nama = val('nama'); if(!nama) return ferr('Isi nama anggota.');
+      const data = {nama, kamar:val('kamar'), status:val('status'), tglGabung:val('gabung')||today(), tglKeluar:val('keluar')||null};
+      if(id){ Object.assign(h.members.find(x=>x.id===id), data); logAct(by, `Ubah data anggota ${nama}`, 'members'); }
+      else { h.members.push({id:uid(), ...data}); logAct(by, `Tambah anggota ${nama}`, 'members'); }
+      await save(); closeSheet(); render(); toast('Data anggota tersimpan.'); return;
+    }
+    case 'del-anggota': {
+      const rec = h.members.find(x=>x.id===id);
+      h.members = h.members.filter(x=>x.id!==id);
+      logAct(S.lastBy||'—', `Hapus anggota ${rec?rec.nama:''}`, 'members');
+      await save(); closeSheet(); render(); return;
+    }
+
+    /* ---- peraturan ---- */
+    case 'sv-peraturan': {
+      const by = needBy(); if(!by) return;
+      const teks = val('teks'); if(!teks) return ferr('Tulis isi peraturannya.');
+      if(id){ const r=h.rules.find(x=>x.id===id); r.teks=teks; r.aktif=chk('aktif'); logAct(by,'Ubah peraturan rumah','house_rules'); }
+      else { h.rules.push({id:uid(), teks, aktif:chk('aktif'), urutan:(h.rules.length+1)}); logAct(by,'Tambah peraturan rumah','house_rules'); }
+      await save(); closeSheet(); render(); toast('Peraturan tersimpan.'); return;
+    }
+    case 'del-peraturan': {
+      h.rules = h.rules.filter(x=>x.id!==id);
+      h.rules.forEach((r,i)=>r.urutan=i+1);
+      logAct(S.lastBy||'—','Hapus peraturan rumah','house_rules');
+      await save(); closeSheet(); render(); return;
+    }
+    case 'rule-move': {
+      const rs = h.rules.slice().sort((a,b)=>a.urutan-b.urutan);
+      const i = rs.findIndex(x=>x.id===id), j = i + (+v);
+      if(i<0||j<0||j>=rs.length) return;
+      [rs[i], rs[j]] = [rs[j], rs[i]];
+      rs.forEach((r,k)=>r.urutan=k+1);
+      await save(); render(); return;
+    }
+
+    /* ---- jenis iuran ---- */
+    case 'sv-jenis': {
+      const by = needBy(); if(!by) return;
+      const nama = val('nama'); if(!nama) return ferr('Isi nama iuran.');
+      const n = num('nominal');
+      if(id){ const j=h.setting.iuranTypes.find(x=>x.id===id); j.nama=nama; j.nominal=n; logAct(by,`Ubah iuran ${nama}`,'iuran_types'); }
+      else { h.setting.iuranTypes.push({id:uid(), nama, nominal:n}); logAct(by,`Tambah iuran ${nama}`,'iuran_types'); }
+      await save(); closeSheet(); render(); toast('Jenis iuran tersimpan.'); return;
+    }
+    case 'del-jenis': {
+      h.setting.iuranTypes = h.setting.iuranTypes.filter(x=>x.id!==id);
+      logAct(S.lastBy||'—','Hapus jenis iuran','iuran_types');
+      await save(); closeSheet(); render(); return;
+    }
+
+    /* ---- kategori ---- */
+    case 'kat-tambah': {
+      const k = val('kat-baru'); if(!k) return;
+      if(!h.setting.kategori.includes(k)) h.setting.kategori.push(k);
+      await save(); render(); return;
+    }
+    case 'kat-hapus': {
+      h.setting.kategori = h.setting.kategori.filter(k=>k!==v);
+      await save(); render(); return;
+    }
+
+    /* ---- password ---- */
+    case 'sv-pass': {
+      const p0=val('p0'), p1=val('p1'), p2=val('p2');
+      const ok = h.auth.passHash === await sha(p0) || h.auth.passHash === 'plain$'+p0;
+      if(!ok) return ferr('Password lama salah.');
+      if(p1.length<6) return ferr('Password baru minimal 6 karakter.');
+      if(p1!==p2) return ferr('Dua password belum sama.');
+      h.auth.passHash = await sha(p1);
+      logAct(S.lastBy||'—','Ganti password rumah','houses');
+      await save(); closeSheet(); toast('Password diganti. Kabari penghuni lain.'); return;
+    }
+
+    /* ---- laporan ---- */
+    case 'print': window.print(); return;
+    case 'csv': {
+      const p = S.period||thisPeriod();
+      const rows = [['Laporan', h.nama, pLabel(p)], [], ['Anggota','Dibayar (EGP)','Status']];
+      aktif(h).forEach(m=>rows.push([m.nama, paidOf(h,m.id,p), statusOf(h,m.id,p)]));
+      rows.push([], ['Tanggal','Kategori','Deskripsi','Nominal (EGP)','Besar','Dicatat oleh']);
+      h.expenses.filter(e=>e.tanggal.slice(0,7)===p).forEach(e=>rows.push([e.tanggal,e.kategori,e.deskripsi,e.nominal,e.besar?'ya':'',e.dicatatOleh]));
+      rows.push([], ['Saldo awal', saldoHingga(h,pShift(p,-1))], ['Iuran masuk', masuk(h,p)], ['Pengeluaran', keluar(h,p)], ['Saldo akhir', saldoHingga(h,p)]);
+      unduh(`igarin-${p}.csv`, rows.map(r=>r.map(x=>`"${String(x==null?'':x).replace(/"/g,'""')}"`).join(',')).join('\n'));
+      return;
+    }
+    case 'tutup-buku': {
+      const p = S.period||thisPeriod();
+      h.closed = h.closed||[];
+      if(h.closed.includes(p)){ h.closed = h.closed.filter(x=>x!==p); toast('Buku ' + pLabel(p) + ' dibuka kembali.'); logAct(S.lastBy||'—',`Buka kembali buku ${pLabel(p)}`,'periods'); }
+      else { h.closed.push(p); toast('Buku ' + pLabel(p) + ' ditutup, data jadi read-only.'); logAct(S.lastBy||'—',`Tutup buku ${pLabel(p)}`,'periods'); }
+      await save(); render(); return;
+    }
+
+    /* ---- simulasi ---- */
+    case 'sim-mode': S.sim.mode=v; render(); return;
+    case 'sim-add': {
+      const nama = prompt('Nama pos pengeluaran');
+      if(nama) S.sim.items.push({nama, v:0});
+      render(); return;
+    }
+    case 'sim-pakai': {
+      const target = +v, h2 = house(), types = h2.setting.iuranTypes||[];
+      const cur = tagihan(h2);
+      if(!types.length || !cur){ h2.setting.iuranTypes = [{id:uid(), nama:'Iuran bulanan', nominal:target}]; }
+      else { const f = target/cur; types.forEach(t=>t.nominal = Math.round(t.nominal*f)); }
+      logAct(S.lastBy||'—', `Set nominal iuran jadi ${nf.format(target)} EGP per orang`, 'iuran_types');
+      await save(); S.page=null; S.tab='iuran'; render();
+      toast('Nominal iuran diperbarui jadi ' + egp(target) + ' per orang.'); return;
+    }
+  }
+});
+document.addEventListener('change', async (ev)=>{
+  const el = ev.target.closest('[data-a]'); if(!el) return;
+  const a = el.dataset.a, h = house();
+  if(a==='sim-orang'){ S.sim.orang = Math.max(1, parseInt(el.value)||1); render(); }
+  else if(a==='sim-item'){ S.sim.items[+el.dataset.i].v = parseFloat(el.value)||0; render(); }
+  else if(a==='sim-iuran'){ S.sim.iuran = parseFloat(el.value)||0; render(); }
+  else if(a==='set-nama'){ h.nama = el.value.trim()||h.nama; await save(); render(); }
+  else if(a==='set-kontak'){ h.kontak = el.value.trim(); await save(); }
+  else if(a==='set-waktu'){ h.setting.waktuPenagihan = el.value; await save(); render(); }
+  else if(a==='set-saldo'){ h.setting.saldoAwal = parseFloat(el.value)||0; await save(); render(); }
+  else if(a==='set-popup'){ h.setting.popupFreq = el.value; await save(); render(); }
+});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ if(S.rulesPopup){S.rulesPopup=false;} S.sheet=null; renderLayer(); } });
+
+function unduh(nama, teks){
+  try{
+    const b = new Blob([teks], {type:'text/csv;charset=utf-8'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b); a.download = nama; a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+    toast('Berkas diunduh.');
+  }catch(e){
+    const w = window.open('', '_blank');
+    if(w){ w.document.write('<pre>'+esc(teks)+'</pre>'); toast('Unduhan diblokir, data dibuka di tab baru.'); }
+    else toast('Unduhan diblokir peramban.');
+  }
+}
+
+/* ---------- mulai ---------- */
+(async function(){
+  await load();
+  if(DB.session.houseId && DB.houses[DB.session.houseId]){ S.route='app'; S.tab='beranda'; maybePopup(); }
+  render();
+})();
+</script>
+</body>
+</html>
