@@ -196,6 +196,24 @@ tr.tot td{font-weight:700;border-top:2px solid var(--ink);border-bottom:0}
 .sheet-hd h2{flex:1}
 .x{background:none;border:0;font-size:1.5rem;line-height:1;color:var(--ink-2);min-width:44px;min-height:44px}
 
+/* ---------- FAB bulat, zona jempol ---------- */
+.fab{position:fixed;right:20px;bottom:calc(78px + env(safe-area-inset-bottom));z-index:45;
+  width:60px;height:60px;border-radius:50%;border:0;background:var(--saffron);color:#3B2B03;
+  display:grid;place-items:center;box-shadow:0 8px 22px -6px rgba(232,160,32,.85);transition:transform .1s ease}
+.fab:active{transform:scale(.94)}
+.fab svg{width:28px;height:28px;stroke-width:2.6}
+@media(min-width:900px){.fab{right:calc(50vw - 430px)}}
+
+/* kartu bayar: area ketuk besar + tombol detail terpisah */
+.pay{padding:0;overflow:hidden}
+.paytap{flex:1;display:flex;align-items:center;gap:11px;padding:12px;background:none;border:0;color:inherit;
+  font:inherit;text-align:left;min-height:68px;min-width:0}
+.paymore{width:46px;align-self:stretch;background:none;border:0;border-left:1px solid var(--line);color:var(--ink-2)}
+.paymore svg{width:18px;height:18px}
+.split-note{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.9rem;color:var(--ink-2);
+  background:var(--paper);border-radius:12px;padding:10px 12px}
+.split-note b{color:var(--ink);font-size:1.05rem;font-family:"Bricolage Grotesque",sans-serif}
+
 /* ---------- lain-lain ---------- */
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(124px + env(safe-area-inset-bottom));
   background:var(--ink);color:#fff;padding:12px 17px;border-radius:14px;z-index:80;font-size:.88rem;max-width:88vw;
@@ -238,7 +256,7 @@ tr.tot td{font-weight:700;border-top:2px solid var(--ink);border-bottom:0}
 <div id="layer"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
-const APP_VERSION = 'v2.0';   // naikkan tiap kali file diubah, supaya mudah cek versi mana yang live
+const APP_VERSION = 'v2.1';   // naikkan tiap kali file diubah, supaya mudah cek versi mana yang live
 const SUPABASE_URL = 'https://mlowsqxwvpejpxewdwrh.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_221A2i1lT8Gxkt49RIhoRQ_3RsyZ_QS';
 const EMAIL_DOMAIN = 'igarin.local';   // login rumah pakai username, bukan email asli
@@ -284,11 +302,28 @@ async function catatLog(nama, aksi, tabel){
   try{ await insertRow('activity_log', {house_id:h.id, member_nama:nama||'—', aksi, tabel_terkait:tabel}); }
   catch(e){ /* jejak aktivitas tidak fatal kalau gagal */ }
 }
-// Bungkus tiap aksi simpan: jalankan panggilan Supabase, lalu muat ulang cache dari server.
-// Kalau gagal (mis. jaringan putus, RLS menolak), tampilkan pesan tanpa mengubah tampilan.
+// Aksi yang butuh hasil server dulu (jarang). Untuk aksi harian pakai quick().
 async function doAction(fn){
-  try{ await fn(); await reloadHouse(); return true; }
+  try{ await fn(); bumpCalc(); await reloadHouse(); return true; }
   catch(e){ ferr(e && e.message ? e.message : 'Gagal menyimpan, coba lagi.'); return false; }
+}
+
+/* quick(ubahLokal, keServer)
+   Ubah cache lokal + gambar ulang SEKARANG, baru kirim ke Supabase di belakang.
+   Klik terasa instan; kalau server menolak, data ditarik ulang dan user diberi tahu. */
+function quick(ubahLokal, keServer, pesan){
+  try{ ubahLokal(); }catch(e){}
+  bumpCalc();
+  render();
+  if(pesan) toast(pesan);
+  (async()=>{
+    try{ await keServer(); bumpCalc(); await reloadHouse(); render(); }
+    catch(e){
+      toast('Gagal simpan ke server — dikembalikan.');
+      try{ bumpCalc(); await reloadHouse(); render(); }catch(_){}
+    }
+  })();
+  return true;
 }
 
 /* ---------- ambil & petakan data rumah dari Supabase ---------- */
@@ -318,6 +353,7 @@ async function reloadHouse(){
   const { data:{ user } } = await sb.auth.getUser();
   const username = user ? user.email.split('@')[0] : '';
   const h = normalize(bundle, username);
+  bumpCalc();
   DB.houses = { [h.id]: h };
   DB.session.houseId = h.id;
   subscribeRealtime(h.id);
@@ -335,6 +371,7 @@ function subscribeRealtime(houseId){
   realtimeChannel = ch;
 }
 function stopRealtime(){ if(realtimeChannel){ sb.removeChannel(realtimeChannel); realtimeChannel=null; } }/* ---------- util ---------- */
+const uidLite = () => Math.random().toString(36).slice(2,9);
 const uid = () => Math.random().toString(36).slice(2,10);
 const today = () => new Date().toISOString().slice(0,10);
 const thisPeriod = () => new Date().toISOString().slice(0,7);
@@ -370,20 +407,47 @@ const ICON = {
 };
 const ic = (n, cls='') => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
 
-/* ---------- perhitungan ---------- */
-function aktif(h){ return h.members.filter(m=>m.status==='aktif'||m.status==='cuti'); }
-function tagihan(h){ return (h.setting.iuranTypes||[]).reduce((a,b)=>a+(+b.nominal||0),0); }
+/* ---------- perhitungan ----------
+   Semua hitungan dipakai belasan kali tiap render (kartu saldo, tiap baris
+   anggota, grafik). Tanpa cache, satu render = puluhan kali menyapu seluruh
+   array -> klik terasa berat. Cache dibuang tiap data berubah (bumpCalc).   */
+let calcCache = new Map(), calcVer = 0;
+function bumpCalc(){ calcVer++; calcCache = new Map(); }
+function memo(key, fn){
+  const k = calcVer + '|' + key;
+  if(calcCache.has(k)) return calcCache.get(k);
+  const v = fn(); calcCache.set(k, v); return v;
+}
+function aktif(h){ return memo('aktif', ()=> h.members.filter(m=>m.status==='aktif'||m.status==='cuti')); }
+
+/* Iuran dibagi rata otomatis: belanja periode itu / jumlah anggota aktif.
+   Kalau periode belum ada belanja, pakai nominal tetap (kalau diisi) supaya
+   iuran awal bulan tetap bisa ditagih di muka. */
+function tagihan(h, period){
+  const p = period || thisPeriod();
+  return memo('tagihan:'+p, ()=>{
+    const n = aktif(h).length;
+    if(!n) return 0;
+    const belanja = keluar(h, p);
+    if(belanja > 0) return Math.ceil(belanja / n);
+    return (h.setting.iuranTypes||[]).reduce((a,b)=>a+(+b.nominal||0),0);
+  });
+}
+function tetap(h){ return (h.setting.iuranTypes||[]).reduce((a,b)=>a+(+b.nominal||0),0); }
 function paidOf(h, memberId, period){
-  return h.payments.filter(p=>p.memberId===memberId && p.period===period).reduce((a,b)=>a+(+b.nominal||0),0);
+  return memo('paid:'+memberId+':'+period, ()=>
+    h.payments.filter(p=>p.memberId===memberId && p.period===period).reduce((a,b)=>a+(+b.nominal||0),0));
 }
 function statusOf(h, memberId, period){
-  const p = paidOf(h, memberId, period), t = tagihan(h);
+  const p = paidOf(h, memberId, period), t = tagihan(h, period);
   if(p<=0) return 'belum';
   if(t>0 && p < t) return 'sebagian';
   return 'lunas';
 }
-function masuk(h, period){ return h.payments.filter(p=>!period||p.period===period).reduce((a,b)=>a+(+b.nominal||0),0); }
-function keluar(h, period){ return h.expenses.filter(e=>!period||e.tanggal.slice(0,7)===period).reduce((a,b)=>a+(+b.nominal||0),0); }
+function masuk(h, period){ return memo('masuk:'+period, ()=>
+  h.payments.filter(p=>!period||p.period===period).reduce((a,b)=>a+(+b.nominal||0),0)); }
+function keluar(h, period){ return memo('keluar:'+period, ()=>
+  h.expenses.filter(e=>!period||e.tanggal.slice(0,7)===period).reduce((a,b)=>a+(+b.nominal||0),0)); }
 function saldo(h){ return (+h.setting.saldoAwal||0) + masuk(h) - keluar(h); }
 function saldoHingga(h, period){
   const mIn = h.payments.filter(p=>p.period<=period).reduce((a,b)=>a+(+b.nominal||0),0);
@@ -562,8 +626,8 @@ function vSiapa(){
    ===================================================================== */
 function chrome(inner, judul){
   const h = house();
-  const tabs = [['beranda','Beranda','home'],['iuran','Iuran','coins'],['belanja','Belanja','receipt'],
-                ['anggota','Anggota','users'],['lainnya','Lainnya','gear']];
+  const tabs = [['beranda','Beranda','home'],['tagihan','Iuran','users'],['belanja','Belanja','receipt'],
+                ['lainnya','Lainnya','gear']];
   return `<header class="bar">
       <h2>${esc(judul || h.nama)}</h2>
       <button class="me" data-a="ganti-aku"><i></i>${esc(getMe()||'pilih nama')}</button>
@@ -576,7 +640,7 @@ function chrome(inner, judul){
 
 /* ---------- BERANDA ---------- */
 function vBeranda(){
-  const h = house(), p = thisPeriod(), t = tagihan(h), ms = aktif(h);
+  const h = house(), p = thisPeriod(), t = tagihan(h,p), ms = aktif(h);
   const lunas = ms.filter(m=>statusOf(h,m.id,p)==='lunas').length;
   const trend = lastPeriods(6).map(x=>({p:x, v:saldoHingga(h,x)}));
   const perKat = {};
@@ -603,7 +667,7 @@ function vBeranda(){
 
     <div class="row mt">
       <button class="btn gold sp" data-a="tab" data-v="belanja">${ic('plus')} Catat belanja</button>
-      <button class="btn soft sp" data-a="tab" data-v="iuran">${ic('coins')} Tandai iuran</button>
+      <button class="btn soft sp" data-a="tab" data-v="tagihan">${ic('coins')} Tandai iuran</button>
     </div>
 
     ${ms.length? `<div class="card mt">
@@ -613,7 +677,7 @@ function vBeranda(){
     </div>` : `<div class="card mt">
       <h3>Belum ada anggota</h3>
       <p class="muted" style="margin:6px 0 12px">Tambahkan penghuni dulu supaya bisa mencatat iuran.</p>
-      <button class="btn block" data-a="tab" data-v="anggota">Tambah anggota</button>
+      <button class="btn block" data-a="tab" data-v="tagihan">Tambah anggota</button>
     </div>`}
 
     ${donutData.length? `<div class="sec"><h2>Belanja ${pShort(p)}</h2><span class="muted">${egp(keluar(h,p))}</span></div>
@@ -631,36 +695,66 @@ function vBeranda(){
     <div class="card"><div class="scrollbox">${rules.map((r,i)=>`<div class="rule"><span class="no">${i+1}</span><div>${esc(r.teks)}</div></div>`).join('')}</div></div>`:''}`;
 }
 
-/* ---------- IURAN: satu ketuk = lunas ---------- */
-function vIuran(){
-  const h = house(), p = S.period || thisPeriod(), t = tagihan(h), ms = aktif(h);
-  const lock = locked(h,p);
-  const sum = masuk(h,p), target = t*ms.length;
-  const cards = ms.map(m=>{
+/* ---------- TAGIHAN: anggota + status iuran jadi satu layar ---------- */
+function vTagihan(){
+  const h = house(), p = S.period || thisPeriod(), ms = aktif(h);
+  const t = tagihan(h, p), lock = locked(h,p);
+  const belanja = keluar(h,p), sum = masuk(h,p), target = t*ms.length;
+  const lunas = ms.filter(m=>statusOf(h,m.id,p)==='lunas').length;
+  const otomatis = belanja > 0;
+
+  const kartu = ms.map(m=>{
     const st = statusOf(h,m.id,p), paid = paidOf(h,m.id,p);
-    return `<button class="pay ${st==='lunas'?'ok':st==='sebagian'?'part':''}" data-a="toggle-bayar" data-id="${m.id}" ${lock?'disabled':''}>
-      <span class="ava">${initials(m.nama)}</span>
-      <span class="bd"><b>${esc(m.nama)}</b>
-        <span>${st==='belum'? (t? `Belum bayar · ${nf.format(t)} EGP`:'Belum bayar')
-              : st==='sebagian'? `Baru ${nf.format(paid)} dari ${nf.format(t)}` : `Lunas ${nf.format(paid)} EGP`}</span></span>
-      <span class="tick">${ic('check')}</span>
-    </button>`;
+    return `<div class="pay ${st==='lunas'?'ok':st==='sebagian'?'part':''}">
+      <button class="paytap" data-a="toggle-bayar" data-id="${m.id}" ${lock?'disabled':''} aria-label="Tandai ${esc(m.nama)} lunas">
+        <span class="ava">${initials(m.nama)}</span>
+        <span class="bd"><b>${esc(m.nama)}</b>
+          <span>${st==='belum'? `Tagihan ${nf.format(t)} EGP`
+                : st==='sebagian'? `Baru ${nf.format(paid)} dari ${nf.format(t)}`
+                : `Lunas ${nf.format(paid)} EGP`}</span></span>
+        <span class="tick">${ic('check')}</span>
+      </button>
+      <button class="paymore" data-a="sheet" data-v="anggota" data-id="${m.id}" aria-label="Detail ${esc(m.nama)}">${ic('more')}</button>
+    </div>`;
   }).join('');
+
+  const keluarGrup = h.members.filter(m=>m.status==='keluar');
+
   return `${periodNav(p)}
-    <div class="card pad-s mt-s">
-      <div class="row"><div class="sp">
-        <div class="tiny">Terkumpul ${pShort(p)}</div>
-        <div class="dsp" style="font-size:1.5rem">${egp(sum)}</div>
-        <div class="tiny">${target? `dari ${egp(target)} · ${Math.round(sum/target*100)}%` : 'nominal iuran belum diatur'}</div>
-      </div>${lock?'<span class="tag plain">buku ditutup</span>':''}</div>
+    <div class="card mt-s">
+      <div class="tiny">Belanja rumah ${pShort(p)}</div>
+      <div class="dsp" style="font-size:1.7rem">${egp(belanja)}</div>
+      <div class="split-note mt-s">
+        <span>${nf.format(belanja)}</span><span>÷</span><span>${ms.length} orang</span><span>=</span>
+        <b>${nf.format(t)} EGP</b>
+      </div>
+      <p class="tiny" style="margin:8px 0 0">${otomatis
+        ? 'Dibagi rata otomatis. Tiap belanja baru, tagihan per orang ikut menyesuaikan.'
+        : 'Belum ada belanja bulan ini, jadi dipakai iuran cadangan. Begitu ada belanja, langsung dibagi rata otomatis.'}</p>
+      <div class="row mt-s">
+        <div class="sp"><div class="tiny">Terkumpul</div><b>${egp(sum)}</b></div>
+        <span class="tag ${lunas===ms.length&&ms.length?'ok':'plain'}">${lunas}/${ms.length} lunas</span>
+      </div>
     </div>
-    ${!t? `<div class="card flat mt-s"><div class="row"><div class="sp"><b>Atur nominal iuran dulu</b>
-      <p class="tiny" style="margin:4px 0 0">Supaya sekali ketuk langsung tercatat pas.</p></div>
-      <button class="btn sm" data-a="page" data-v="jenis-iuran">Atur</button></div></div>`:''}
-    <p class="tiny mt-s">Ketuk nama untuk menandai lunas. Ketuk lagi untuk membatalkan. Perlu nominal berbeda? Tahan/ketuk tombol Ubah di bawah.</p>
-    <div class="pays mt-s">${cards || '<div class="empty">Belum ada anggota aktif.</div>'}</div>
-    ${ms.length? `<button class="btn soft block mt" data-a="sheet" data-v="bayar">Catat pembayaran sebagian / ubah nominal</button>`:''}
-    <p class="tiny center mt">Igarin tidak mengirim tagihan otomatis ke siapa pun.</p>`;
+
+    <div class="card mt-s">
+      <div class="row">
+        <input id="q-anggota" class="sp" placeholder="Tambah anggota — ketik nama" autocomplete="off" enterkeyhint="done">
+        <button class="btn" data-a="q-anggota" aria-label="Tambah anggota">${ic('plus')}</button>
+      </div>
+      <div id="err-q" class="err mt-s" hidden></div>
+    </div>
+
+    <p class="tiny mt-s">Ketuk nama untuk tandai lunas. Ketuk lagi untuk batal. Titik tiga untuk detail anggota.</p>
+    <div class="pays mt-s">${kartu || '<div class="empty">Belum ada anggota. Ketik nama di atas.</div>'}</div>
+    ${ms.length? `<button class="btn soft block mt" data-a="sheet" data-v="bayar">Bayar sebagian / ubah nominal</button>`:''}
+
+    ${keluarGrup.length? `<div class="sec"><h2>Sudah keluar</h2><span class="muted">${keluarGrup.length}</span></div>
+    <div class="card"><div class="list">${keluarGrup.map(m=>`<button class="li" data-a="sheet" data-v="anggota" data-id="${m.id}">
+      <span class="ava">${initials(m.nama)}</span><span class="bd"><b>${esc(m.nama)}</b><span>keluar ${dLabel(m.tglKeluar)}</span></span>
+      <span class="tiny">›</span></button>`).join('')}</div></div>`:''}
+
+    <button class="fab" data-a="tab" data-v="belanja" aria-label="Catat belanja">${ic('plus')}</button>`;
 }
 function periodNav(p){
   return `<div class="row">
@@ -714,47 +808,13 @@ function vBelanja(){
       </div>`).join('') || '<div class="empty">Belum ada rencana.</div>'}</div></div>`;
 }
 
-/* ---------- ANGGOTA: tambah langsung di layar ---------- */
-function vAnggota(){
-  const h = house(), p = thisPeriod();
-  const grup = [['aktif','Aktif'],['cuti','Cuti / pulang kampung'],['keluar','Sudah keluar']];
-  return `<div class="card">
-      <h3>Tambah anggota</h3>
-      <p class="tiny" style="margin:4px 0 10px">Ketik nama, tekan Tambah. Detail lain bisa diisi belakangan.</p>
-      <div class="row">
-        <input id="q-anggota" class="sp" placeholder="Nama penghuni" autocomplete="off" enterkeyhint="done">
-        <button class="btn" data-a="q-anggota">Tambah</button>
-      </div>
-      <div id="err-q" class="err mt-s" hidden></div>
-    </div>
-
-    ${grup.map(([g,label])=>{
-      const ms = h.members.filter(m=>m.status===g);
-      if(!ms.length) return '';
-      return `<div class="sec"><h2>${label}</h2><span class="muted">${ms.length}</span></div>
-      <div class="card"><div class="list">${ms.map(m=>`<button class="li" data-a="sheet" data-v="anggota" data-id="${m.id}">
-        <span class="ava">${initials(m.nama)}</span>
-        <span class="bd"><b>${esc(m.nama)}</b><span>${m.kamar?'Kamar '+esc(m.kamar)+' · ':''}gabung ${dLabel(m.tglGabung)}</span></span>
-        ${g!=='keluar'? `<span class="tag ${statusOf(h,m.id,p)==='lunas'?'ok':statusOf(h,m.id,p)==='sebagian'?'part':'no'}">${statusOf(h,m.id,p)}</span>`:''}
-        <span class="tiny">›</span></button>`).join('')}</div></div>`;
-    }).join('')}
-
-    ${h.members.length? `<div class="sec"><h2>Riwayat iuran</h2></div>
-    <div class="card pad-s"><div class="scroll-x"><table>
-      <thead><tr><th>Anggota</th>${lastPeriods(6).map(x=>`<th class="n">${pShort(x).split(' ')[0]}</th>`).join('')}</tr></thead>
-      <tbody>${aktif(h).map(m=>`<tr><td>${esc(m.nama)}</td>${lastPeriods(6).map(x=>{
-        const st=statusOf(h,m.id,x);
-        return `<td class="n">${st==='belum'?'—':nf.format(paidOf(h,m.id,x))}</td>`;}).join('')}</tr>`).join('')}</tbody>
-    </table></div></div>` : ''}`;
-}
-
 /* ---------- LAINNYA: laporan, simulasi, peraturan, setting ---------- */
 function vLainnya(){
   const h = house();
   const menu = [
     ['laporan','Laporan bulanan','Ringkasan, ekspor, tutup buku','chart'],
     ['simulasi','Simulasi iuran','Hitung iuran ideal per orang','calc'],
-    ['jenis-iuran','Nominal iuran',`${(h.setting.iuranTypes||[]).length} jenis · ${egp(tagihan(h))} per orang`,'coins'],
+    ['jenis-iuran','Iuran cadangan',`dipakai saat belum ada belanja · ${egp(tetap(h))}`,'coins'],
     ['peraturan','Peraturan rumah',`${(h.rules||[]).filter(r=>r.aktif).length} aktif`,'book'],
     ['kategori','Kategori belanja',`${(h.setting.kategori||[]).length} kategori`,'receipt'],
     ['log','Riwayat input',`${(h.log||[]).length} aktivitas`,'clock'],
@@ -851,7 +911,7 @@ function vSimulasi(){
 
 /* ---------- NOMINAL IURAN ---------- */
 function vJenisIuran(){
-  const h = house(), t = tagihan(h);
+  const h = house(), t = tetap(h);
   return `<div class="card">
       <h3>Tambah jenis iuran</h3>
       <p class="tiny" style="margin:4px 0 10px">Nominal per orang per bulan.</p>
@@ -1010,7 +1070,7 @@ function renderLayer(){
   const p = S.period || thisPeriod();
 
   if(name==='bayar'){
-    const t = tagihan(h);
+    const t = tagihan(h,p);
     const m = id ? h.members.find(x=>x.id===id) : aktif(h)[0];
     const paid = m? paidOf(h,m.id,p) : 0;
     const riwayat = m? h.payments.filter(x=>x.memberId===m.id&&x.period===p) : [];
@@ -1137,7 +1197,7 @@ function renderLayer(){
 /* =====================================================================
    ROUTER
    ===================================================================== */
-const JUDUL = {beranda:null, iuran:'Iuran', belanja:'Belanja', anggota:'Anggota', lainnya:'Lainnya',
+const JUDUL = {beranda:null, tagihan:'Iuran & anggota', belanja:'Belanja', lainnya:'Lainnya',
   laporan:'Laporan bulanan', simulasi:'Simulasi iuran', 'jenis-iuran':'Nominal iuran', kategori:'Kategori belanja',
   peraturan:'Peraturan rumah', log:'Riwayat input', setting:'Setting rumah'};
 function render(){
@@ -1157,9 +1217,8 @@ function render(){
     else if(page==='peraturan') inner = vPeraturan();
     else if(page==='log') inner = vLog();
     else if(page==='setting') inner = vSetting();
-    else if(S.tab==='iuran') inner = vIuran();
+    else if(S.tab==='tagihan') inner = vTagihan();
     else if(S.tab==='belanja') inner = vBelanja();
-    else if(S.tab==='anggota') inner = vAnggota();
     else if(S.tab==='lainnya') inner = vLainnya();
     else inner = vBeranda();
     const back = page? `<button class="btn ghost sm" data-a="tab" data-v="lainnya">← Lainnya</button>` : '';
@@ -1283,21 +1342,26 @@ document.addEventListener('click', async (ev)=>{
       const me = getMe(); if(!me){ S.sheet={name:'aku'}; renderLayer(); return; }
       const m = h.members.find(x=>x.id===id);
       const st = statusOf(h, id, p);
-      const t = tagihan(h);
+      const t = tagihan(h,p);
       if(st === 'belum'){
-        if(!t){ S.sheet={name:'bayar', id}; renderLayer(); return toast('Atur nominal iuran dulu, atau isi manual.'); }
-        const ok = await doAction(async()=>{
-          await insertRow('payments', {house_id:h.id, member_id:id, periode:p, nominal:t, tanggal_bayar:today(), dicatat_oleh:me});
-          await catatLog(me, `Tandai lunas ${m?m.nama:''} ${pShort(p)} ${nf.format(t)} EGP`, 'payments');
-        });
-        if(ok){ render(); toast(`${m?m.nama:''} lunas ${egp(t)}.`); }
+        if(!t){ S.sheet={name:'bayar', id}; renderLayer(); return toast('Belum ada belanja & iuran cadangan kosong — isi manual.'); }
+        const tmp = 'tmp-'+uidLite();
+        quick(
+          ()=> h.payments.push({id:tmp, memberId:id, period:p, nominal:t, status:'lunas', tanggal:today(), dicatatOleh:me}),
+          async()=>{
+            await insertRow('payments', {house_id:h.id, member_id:id, periode:p, nominal:t, tanggal_bayar:today(), dicatat_oleh:me});
+            await catatLog(me, `Tandai lunas ${m?m.nama:''} ${pShort(p)} ${nf.format(t)} EGP`, 'payments');
+          },
+          `${m?m.nama:''} lunas ${egp(t)}.`);
       } else {
         const recs = h.payments.filter(x=>x.memberId===id && x.period===p);
-        const ok = await doAction(async()=>{
-          for(const r of recs) await deleteRow('payments', r.id);
-          await catatLog(me, `Batalkan catatan iuran ${m?m.nama:''} ${pShort(p)}`, 'payments');
-        });
-        if(ok){ render(); toast('Dibatalkan.'); }
+        quick(
+          ()=>{ h.payments = h.payments.filter(x=>!(x.memberId===id && x.period===p)); },
+          async()=>{
+            for(const r of recs) if(!String(r.id).startsWith('tmp-')) await deleteRow('payments', r.id);
+            await catatLog(me, `Batalkan catatan iuran ${m?m.nama:''} ${pShort(p)}`, 'payments');
+          },
+          'Dibatalkan.');
       }
       return;
     }
@@ -1331,11 +1395,17 @@ document.addEventListener('click', async (ev)=>{
       const n = num('q-nominal'); if(n<=0) return ferr('Isi nominalnya dulu.');
       const d = val('q-deskripsi'); if(!d) return ferr('Tulis belanjanya untuk apa.');
       const kat = S.kat || (h.setting.kategori||[])[0] || 'Lain-lain';
-      const ok = await doAction(async()=>{
-        await insertRow('expenses', {house_id:h.id, tanggal:today(), kategori:kat, deskripsi:d, nominal:n, is_besar:false, dicatat_oleh:me});
-        await catatLog(me, `Catat belanja ${d} ${nf.format(n)} EGP`, 'expenses');
-      });
-      if(ok){ render(); toast(`Tercatat ${egp(n)} · ${kat}`); }
+      const ms = aktif(h).length;
+      const tambahan = ms? Math.ceil(n/ms) : 0;
+      quick(
+        ()=>{ h.expenses.push({id:'tmp-'+uidLite(), tanggal:today(), kategori:kat, deskripsi:d, nominal:n, besar:false, dicatatOleh:me, bukti:''});
+              const el1=document.getElementById('q-nominal'), el2=document.getElementById('q-deskripsi');
+              if(el1) el1.value=''; if(el2) el2.value=''; },
+        async()=>{
+          await insertRow('expenses', {house_id:h.id, tanggal:today(), kategori:kat, deskripsi:d, nominal:n, is_besar:false, dicatat_oleh:me});
+          await catatLog(me, `Catat belanja ${d} ${nf.format(n)} EGP`, 'expenses');
+        },
+        ms? `${egp(n)} · ${kat} — tagihan/orang +${nf.format(tambahan)}` : `Tercatat ${egp(n)} · ${kat}`);
       return;
     }
     case 'sv-belanja': {
@@ -1393,11 +1463,15 @@ document.addEventListener('click', async (ev)=>{
       const me = getMe();
       const nama = val('q-anggota'); if(!nama) return ferr('Ketik nama dulu.');
       if(h.members.some(m=>m.nama.toLowerCase()===nama.toLowerCase())) return ferr(nama + ' sudah ada di daftar.');
-      const ok = await doAction(async()=>{
-        await insertRow('members', {house_id:h.id, nama, status:'aktif', tanggal_gabung:today()});
-        await catatLog(me||nama, `Tambah anggota ${nama}`, 'members');
-      });
-      if(ok){ if(!getMe()) setMe(nama); render(); toast(nama + ' ditambahkan.'); }
+      if(!getMe()) setMe(nama);
+      quick(
+        ()=>{ h.members.push({id:'tmp-'+uidLite(), nama, kamar:null, status:'aktif', tglGabung:today(), tglKeluar:null});
+              const el=document.getElementById('q-anggota'); if(el){ el.value=''; el.focus(); } },
+        async()=>{
+          await insertRow('members', {house_id:h.id, nama, status:'aktif', tanggal_gabung:today()});
+          await catatLog(me||nama, `Tambah anggota ${nama}`, 'members');
+        },
+        nama + ' ditambahkan.');
       return;
     }
     case 'sv-anggota': {
@@ -1546,13 +1620,13 @@ document.addEventListener('click', async (ev)=>{
     case 'sim-mode': S.sim.mode=v; render(); return;
     case 'sim-add': { const nama = prompt('Nama pos pengeluaran'); if(nama) S.sim.items.push({nama, v:0}); render(); return; }
     case 'sim-pakai': {
-      const target = +v, types = h.setting.iuranTypes||[], cur = tagihan(h);
+      const target = +v, types = h.setting.iuranTypes||[], cur = tetap(h);
       const ok = await doAction(async()=>{
         if(!types.length || !cur){ await insertRow('iuran_types', {house_id:h.id, nama_iuran:'Iuran bulanan', nominal_default:target}); }
         else { const f = target/cur; for(const t of types) await updateRow('iuran_types', t.id, {nominal_default: Math.round(t.nominal*f)}); }
         await catatLog(getMe()||'—', `Set iuran ${nf.format(target)} EGP per orang`, 'iuran_types');
       });
-      if(ok){ S.page=null; S.tab='iuran'; render(); toast('Nominal iuran jadi ' + egp(target) + ' per orang.'); }
+      if(ok){ S.page=null; S.tab='tagihan'; render(); toast('Nominal iuran jadi ' + egp(target) + ' per orang.'); }
       return;
     }
 
