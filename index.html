@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Igarin — Kas Rumah</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230D4F45'/%3E%3Cpath d='M14 40c6-3 10-9 14-16 3 6 6 10 10 12 4 2 8 1 12-3' stroke='%23E8A020' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='50' cy='20' r='5' fill='%23E8A020'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230D4F45'/%3E%3Cpath d='M14 40c6-3 10-9 14-16 3 6 6 10 10 12 4 2 8 1 12-3' stroke='%23E8A020' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#0D4F45">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -258,6 +261,101 @@ tr.tot td{font-weight:700;border-top:2px solid var(--ink);border-bottom:0}
 .price b{font-family:"Bricolage Grotesque",sans-serif;font-size:2rem}
 .code-in{font-size:1.55rem;letter-spacing:.3em;text-align:center;font-family:"Bricolage Grotesque",sans-serif;font-weight:800}
 
+/* ================= 3D, BAYANGAN, TEKAN ================= */
+:root{
+  --sh-1:0 1px 2px rgba(13,79,69,.06), 0 2px 6px rgba(13,79,69,.06);
+  --sh-2:0 2px 4px rgba(13,79,69,.07), 0 10px 22px -10px rgba(13,79,69,.28);
+  --sh-3:0 4px 8px rgba(13,79,69,.09), 0 18px 38px -14px rgba(13,79,69,.42);
+}
+.card{box-shadow:var(--sh-1);transition:box-shadow .26s ease, transform .22s cubic-bezier(.22,.8,.3,1)}
+.land .card{box-shadow:var(--sh-2)}
+.kas{box-shadow:var(--sh-3)}
+.pay{box-shadow:var(--sh-1)}
+.nav{box-shadow:0 -2px 16px -6px rgba(13,79,69,.22)}
+.sheet{box-shadow:0 -10px 50px -12px rgba(13,79,69,.5)}
+
+/* kartu miring halus saat disentuh/hover — kesan 3D */
+.tilt{transform-style:preserve-3d}
+@media(hover:hover){
+  .tilt:hover{transform:translateY(-3px) rotateX(1.6deg);box-shadow:var(--sh-3)}
+}
+
+/* TEKAN: mengecil + masuk ke dalam, balik lagi dengan pantulan kecil */
+.press{transition:transform .13s cubic-bezier(.3,.8,.4,1), box-shadow .13s ease, filter .13s ease}
+.press:active{transform:scale(.955) translateY(1px);box-shadow:var(--sh-1);filter:brightness(.97)}
+.press.pushed{animation:pushBack .32s cubic-bezier(.34,1.5,.5,1)}
+@keyframes pushBack{0%{transform:scale(.94) translateY(2px)}55%{transform:scale(1.025) translateY(-1px)}100%{transform:none}}
+.btn{box-shadow:var(--sh-1)}
+.btn.gold{box-shadow:0 2px 4px rgba(232,160,32,.28), 0 10px 22px -10px rgba(232,160,32,.8)}
+.fab{transition:transform .14s cubic-bezier(.3,.8,.4,1),box-shadow .18s ease}
+.fab:active{transform:scale(.9)}
+.fab.pushed{animation:pushBack .36s cubic-bezier(.34,1.6,.5,1)}
+.tick{transition:background .22s ease,border-color .22s ease,transform .2s cubic-bezier(.34,1.5,.5,1)}
+
+/* ---------- halaman depan: hero, ilustrasi, CTA ---------- */
+.land3d{position:relative;z-index:1}
+#bg3d{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;opacity:.85}
+.hero-h1{font-size:2.25rem;line-height:1.08}
+.art{margin:6px -6px 18px;perspective:900px}
+.art svg{width:100%;height:auto;display:block}
+.art .bar{transform-origin:50% 100%;animation:barUp .85s cubic-bezier(.22,.9,.3,1) both}
+.art .b1{animation-delay:.05s}.art .b2{animation-delay:.15s}.art .b3{animation-delay:.25s}.art .b4{animation-delay:.35s}
+@keyframes barUp{from{transform:scaleY(.05);opacity:0}to{transform:scaleY(1);opacity:1}}
+.art .trend{stroke-dasharray:260;stroke-dashoffset:260;animation:draw 1.1s .45s cubic-bezier(.3,.8,.3,1) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.art .dot{opacity:0;animation:popIn .4s 1.4s cubic-bezier(.34,1.5,.5,1) forwards}
+.art .coin{transform-origin:248px 58px;animation:coinFloat 3.6s 1.2s ease-in-out infinite}
+@keyframes coinFloat{0%,100%{transform:translateY(0) rotateZ(0)}50%{transform:translateY(-7px) rotateZ(-4deg)}}
+
+/* CTA utama: besar, kontras, timbul */
+.cta-big{display:flex;align-items:center;gap:14px;width:100%;padding:20px 18px;border:0;border-radius:22px;
+  background:linear-gradient(150deg,#17695C,#0D4F45 76%);color:#fff;text-align:left;
+  box-shadow:0 6px 14px rgba(13,79,69,.28), 0 20px 40px -16px rgba(13,79,69,.75);position:relative;overflow:hidden}
+.cta-big::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 100% at 85% -20%,rgba(232,160,32,.35),transparent 60%)}
+.cta-ic{width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,.16);display:grid;place-items:center;flex:0 0 auto;position:relative;z-index:2}
+.cta-ic svg{width:26px;height:26px;stroke:#fff;stroke-width:2}
+.cta-tx{flex:1;position:relative;z-index:2}
+.cta-tx b{display:block;font-family:"Bricolage Grotesque",sans-serif;font-size:1.3rem;letter-spacing:-.02em}
+.cta-tx span{font-size:.82rem;opacity:.82}
+.cta-ar{font-size:1.5rem;opacity:.9;position:relative;z-index:2;transition:transform .22s ease}
+.cta-big:active .cta-ar{transform:translateX(4px)}
+
+/* rumah contoh: kecil, di bawah */
+.demo-mini{text-align:center}
+.demo-btn{display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:0 16px;border-radius:99px;
+  border:1.5px dashed var(--line);background:transparent;color:var(--ink-2);font-size:.85rem;font-weight:600}
+.demo-btn svg{width:15px;height:15px;fill:currentColor;stroke:none}
+
+/* ---------- checkout: muat satu layar ---------- */
+.sheet-co{max-height:min(96dvh,720px);overflow:hidden;display:flex;flex-direction:column}
+.co{display:flex;flex-direction:column;gap:12px;padding-bottom:6px}
+.co-hd h2{font-size:1.35rem;margin-top:2px}
+.co-step{font-size:.72rem;font-weight:700;color:var(--saffron);letter-spacing:.06em;text-transform:uppercase}
+.co-price{background:linear-gradient(150deg,#17695C,#0D4F45);color:#fff;border-radius:18px;padding:16px;box-shadow:var(--sh-2)}
+.co-price b{display:block;font-family:"Bricolage Grotesque",sans-serif;font-size:2rem;line-height:1}
+.co-price span{font-size:.8rem;opacity:.82}
+.co-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.co-list li{display:flex;align-items:center;gap:9px;font-size:.9rem}
+.co-list svg{width:17px;height:17px;stroke:var(--lunas);fill:none;stroke-width:2.4;flex:0 0 auto}
+.qr-box{background:#fff;border-radius:18px;padding:12px;box-shadow:var(--sh-2);display:grid;place-items:center;
+  aspect-ratio:1/1;max-height:38dvh;margin:0 auto;width:100%;max-width:250px}
+.qr-box img{width:100%;height:100%;object-fit:contain;border-radius:10px}
+.qr-ph{display:grid;place-items:center;gap:6px;color:var(--ink-2);text-align:center}
+.qr-ph svg{width:52px;height:52px;stroke:var(--line);fill:none;stroke-width:1.6}
+.qr-ph span{font-size:.85rem;font-weight:600}
+.qr-ph small{font-size:.7rem}
+.co-bank{display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:10px 12px}
+.co-bank b{display:block;font-family:"Bricolage Grotesque",sans-serif;font-size:1.05rem;letter-spacing:.02em}
+.co-final{display:flex;gap:12px;align-items:flex-start;background:var(--nil-pale);border-radius:16px;padding:14px}
+.co-final svg{width:26px;height:26px;stroke:var(--nil);fill:none;stroke-width:1.9;flex:0 0 auto}
+.co-final p{margin:0;font-size:.88rem}
+@media(max-height:680px){
+  .co-hd h2{font-size:1.15rem}
+  .co-price b{font-size:1.6rem}
+  .qr-box{max-height:30dvh;max-width:210px}
+  .co-list li{font-size:.84rem}
+}
+
 /* ---------- gerak ---------- */
 html{scroll-behavior:smooth}
 main,.land{-webkit-overflow-scrolling:touch}
@@ -309,8 +407,19 @@ main,.land{-webkit-overflow-scrolling:touch}
 <div id="app"></div>
 <div id="layer"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script>
-const APP_VERSION = 'v2.2';   // naikkan tiap kali file diubah, supaya mudah cek versi mana yang live
+const APP_VERSION = 'v3.0';
+/* ====== GANTI DATA PEMBAYARAN DI SINI ======
+   qrisUrl : tautan gambar QRIS kamu (unggah ke repo GitHub, isi nama berkasnya, mis. 'qris.png').
+             Kosongkan ('') kalau belum ada -> kotak QR tampil sebagai placeholder rapi. */
+const BAYAR = {
+  qrisUrl : '',
+  bank    : 'BCA',
+  rekening: '1234567890',
+  atasNama: 'Nama Pemilik',
+  wa      : '6281234567890'
+};   // naikkan tiap kali file diubah, supaya mudah cek versi mana yang live
 const SUPABASE_URL = 'https://mlowsqxwvpejpxewdwrh.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_221A2i1lT8Gxkt49RIhoRQ_3RsyZ_QS';
 const EMAIL_DOMAIN = 'igarin.local';   // login rumah pakai username, bukan email asli
@@ -457,7 +566,10 @@ const ICON = {
   clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
   book:'<path d="M4 4h9a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M16 7h4v13h-4"/>',
   plus:'<path d="M12 5v14M5 12h14"/>',
-  more:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>'
+  more:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
+  play:'<path d="M8 5.5v13l11-6.5z"/>',
+  qr:'<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><path d="M14 14h3v3h-3zM19.5 14v0M14 19.5h3M19.5 19.5v0"/>',
+  chat:'<path d="M20 15a3 3 0 0 1-3 3H9l-5 3V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3z"/>'
 };
 const ic = (n, cls='') => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
 
@@ -609,27 +721,79 @@ function setMe(nama){
    HALAMAN DEPAN
    ===================================================================== */
 function vLanding(){
-  return `<div class="land">
+  return `<div class="land land3d">
+    <canvas id="bg3d" aria-hidden="true"></canvas>
+
     <div class="brand"><span class="mark">ig</span> Igarin</div>
-    <h1>Kas rumah yang semua penghuni bisa lihat.</h1>
+
+    <h1 class="hero-h1">Kas rumah yang semua penghuni bisa lihat.</h1>
     <p class="lede">Catat iuran dan belanja rumah. Saldo langsung kelihatan, tanpa ribut soal uang.</p>
 
-    <button class="btn gold block" data-a="demo">Coba rumah contoh</button>
-    <button class="btn soft block mt-s" data-a="go" data-v="masuk">Masuk ke rumah saya</button>
+    ${artGrowth()}
 
-    <div class="card mt">
+    <button class="cta-big press" data-a="go" data-v="masuk">
+      <span class="cta-ic">${ic('home')}</span>
+      <span class="cta-tx"><b>Masuk ke Rumah Saya</b><span>Sudah punya akun rumah</span></span>
+      <span class="cta-ar">→</span>
+    </button>
+
+    <div class="card mt tilt">
       <div class="pt">${ic('check')}<div>Siapa sudah bayar, siapa belum — satu layar.</div></div>
       <div class="pt">${ic('check')}<div>Belanja rumah tercatat lengkap dengan nama pencatatnya.</div></div>
       <div class="pt">${ic('check')}<div>Laporan bulanan siap diunduh.</div></div>
     </div>
 
-    <div class="card mt">
+    <div class="card mt buy tilt">
       <div class="price"><b>${idr(HARGA_IDR)}</b><span class="muted">sekali bayar, selamanya</span></div>
-      <p class="tiny" style="margin:8px 0 12px">Satu harga untuk satu rumah, berapa pun jumlah penghuninya.${stokTersedia==null?'':` Sisa ${stokTersedia} kode.`}</p>
-      <button class="btn block" data-a="go" data-v="aktivasi">Saya punya kode aktivasi</button>
+      <p class="tiny" style="margin:8px 0 14px">Satu harga untuk satu rumah, berapa pun jumlah penghuninya.</p>
+      <button class="btn gold block press" data-a="sheet" data-v="checkout">Beli akses rumah</button>
+      <button class="btn soft block mt-s press" data-a="go" data-v="aktivasi">Saya sudah punya kode</button>
+    </div>
+
+    <div class="demo-mini mt">
+      <button class="demo-btn press" data-a="demo">
+        <span>${ic('play')}</span> Lihat rumah contoh dulu
+      </button>
+      <p class="tiny center" style="margin:8px 0 0">Isi lengkap, tanpa daftar</p>
     </div>
 
     <p class="tiny center mt">Igarin ${APP_VERSION} · <button class="btn ghost xs" data-a="go" data-v="owner">Panel pemilik</button></p>
+  </div>`;
+}
+
+/* Ilustrasi vektor: kas rumah tumbuh. Dibuat sendiri, bukan stok. */
+function artGrowth(){
+  return `<div class="art" aria-hidden="true">
+    <svg viewBox="0 0 320 180" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="gBar" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stop-color="#0D4F45"/><stop offset="100%" stop-color="#1C8A72"/>
+        </linearGradient>
+        <linearGradient id="gGlow" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#E8A020" stop-opacity=".35"/><stop offset="100%" stop-color="#E8A020" stop-opacity="0"/>
+        </linearGradient>
+        <filter id="fSh" x="-30%" y="-30%" width="160%" height="180%">
+          <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#0D4F45" flood-opacity=".22"/>
+        </filter>
+      </defs>
+      <ellipse cx="160" cy="168" rx="120" ry="10" fill="#0D4F45" opacity=".08"/>
+      <rect x="18" y="30" width="284" height="120" rx="18" fill="url(#gGlow)"/>
+      <g filter="url(#fSh)">
+        <rect x="42"  y="104" width="34" height="46" rx="9" fill="url(#gBar)" class="bar b1"/>
+        <rect x="88"  y="84"  width="34" height="66" rx="9" fill="url(#gBar)" class="bar b2"/>
+        <rect x="134" y="62"  width="34" height="88" rx="9" fill="url(#gBar)" class="bar b3"/>
+        <rect x="180" y="42"  width="34" height="108" rx="9" fill="url(#gBar)" class="bar b4"/>
+      </g>
+      <g class="coin">
+        <circle cx="248" cy="58" r="26" fill="#E8A020" filter="url(#fSh)"/>
+        <circle cx="248" cy="58" r="18" fill="none" stroke="#8A5E06" stroke-width="2.5" opacity=".55"/>
+        <text x="248" y="66" text-anchor="middle" font-family="Bricolage Grotesque,sans-serif"
+              font-size="19" font-weight="800" fill="#4A3203">E</text>
+      </g>
+      <path class="trend" d="M50 116 L105 96 L151 74 L197 52 L236 40"
+            fill="none" stroke="#E8A020" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle class="dot" cx="236" cy="40" r="5.5" fill="#fff" stroke="#E8A020" stroke-width="3.5"/>
+    </svg>
   </div>`;
 }
 
@@ -1165,6 +1329,54 @@ function renderLayer(){
         <span class="bd"><b>${nf.format(x.nominal)} EGP</b><span>${dLabel(x.tanggal)} · ${esc(x.dicatatOleh)}</span></span>
         <button class="btn soft xs" data-a="del-bayar" data-id="${x.id}">Hapus</button></div>`).join('')}</div></div>`:''}`);
   }
+  else if(name==='checkout'){
+    const step = S.step || 1;
+    const wa = `https://wa.me/${BAYAR.wa}?text=${encodeURIComponent('Halo, saya sudah transfer '+idr(HARGA_IDR)+' untuk Igarin. Ini bukti transfernya.')}`;
+    let isi = '';
+    if(step===1){
+      isi = `<div class="co">
+        <div class="co-hd"><span class="co-step">Langkah 1 dari 3</span><h2>Bayar sekali, dipakai selamanya</h2></div>
+        <div class="co-price"><b>${idr(HARGA_IDR)}</b><span>satu rumah · tanpa biaya bulanan</span></div>
+        <ul class="co-list">
+          <li>${ic('check')} Semua penghuni bisa akses</li>
+          <li>${ic('check')} Data tersimpan aman di cloud</li>
+          <li>${ic('check')} Laporan bulanan & ekspor</li>
+        </ul>
+        <button class="btn gold block press" data-a="co-step" data-v="2">Lanjut ke pembayaran</button>
+      </div>`;
+    } else if(step===2){
+      isi = `<div class="co">
+        <div class="co-hd"><span class="co-step">Langkah 2 dari 3</span><h2>Scan QRIS atau transfer</h2></div>
+        <div class="qr-box">
+          ${BAYAR.qrisUrl
+            ? `<img src="${esc(BAYAR.qrisUrl)}" alt="Kode QRIS pembayaran Igarin">`
+            : `<div class="qr-ph">${ic('qr')}<span>QRIS belum dipasang</span><small>isi BAYAR.qrisUrl di kode</small></div>`}
+        </div>
+        <div class="co-bank">
+          <div><span class="tiny">${esc(BAYAR.bank)} a.n. ${esc(BAYAR.atasNama)}</span><b>${esc(BAYAR.rekening)}</b></div>
+          <button class="btn soft sm press" data-a="salin-rek">Salin</button>
+        </div>
+        <div class="row">
+          <button class="btn soft press" data-a="co-step" data-v="1">←</button>
+          <button class="btn gold sp press" data-a="co-step" data-v="3">Sudah bayar</button>
+        </div>
+      </div>`;
+    } else {
+      isi = `<div class="co">
+        <div class="co-hd"><span class="co-step">Langkah 3 dari 3</span><h2>Kirim bukti, kode dikirim balik</h2></div>
+        <div class="co-final">${ic('chat')}
+          <p>Kirim bukti transfer lewat WhatsApp. Kode aktivasi 9 digit dikirim balik, biasanya di bawah 24 jam.</p>
+        </div>
+        <a class="btn block press" style="text-decoration:none" href="${wa}" target="_blank" rel="noopener">Kirim bukti via WhatsApp</a>
+        <button class="btn soft block mt-s press" data-a="go" data-v="aktivasi">Saya sudah punya kode</button>
+      </div>`;
+    }
+    L.innerHTML = `<div class="scrim" data-a="close-scrim"><div class="sheet sheet-co" role="dialog" aria-modal="true" aria-label="Pembelian akses">
+      <div class="grab"></div>
+      <div class="sheet-hd"><h2 class="hide">Beli akses</h2><span class="sp"></span><button class="x press" data-a="close" aria-label="Tutup">×</button></div>
+      ${isi}</div></div>`;
+    return;
+  }
   else if(name==='cepat'){
     const kat = S.kat || (h.setting.kategori||[])[0] || 'Lain-lain';
     L.innerHTML = sheet('Catat belanja', `
@@ -1284,6 +1496,111 @@ function renderLayer(){
   if(first) first.focus({preventScroll:true});
 }
 
+
+/* =====================================================================
+   LATAR 3D (three.js) — koin & kartu melayang, ikut gerak scroll.
+   Aturan main: hiasan, bukan beban. Mati sendiri kalau perangkat lemah,
+   kalau user minta hemat gerak, kalau tab tidak terlihat, atau kalau
+   three.js gagal dimuat. App tetap jalan penuh tanpa ini.
+   ===================================================================== */
+const Bg3D = (()=>{
+  let renderer, scene, cam, benda = [], raf = 0, hidup = false, targetScroll = 0, curScroll = 0, t0 = 0;
+
+  function bolehJalan(){
+    if(typeof THREE === 'undefined') return false;
+    if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+    if((navigator.hardwareConcurrency || 4) < 4) return false;          // HP lemah
+    if(navigator.deviceMemory && navigator.deviceMemory < 3) return false;
+    if(navigator.connection && navigator.connection.saveData) return false;
+    return true;
+  }
+
+  function start(){
+    const cv = document.getElementById('bg3d');
+    if(!cv || hidup) return;
+    if(!bolehJalan()){ cv.style.display='none'; return; }
+    try{
+      renderer = new THREE.WebGLRenderer({canvas:cv, alpha:true, antialias:false, powerPreference:'low-power'});
+    }catch(e){ cv.style.display='none'; return; }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 1.6));   // jangan 3x di HP retina
+    renderer.setSize(window.innerWidth, window.innerHeight, false);
+
+    scene = new THREE.Scene();
+    cam = new THREE.PerspectiveCamera(52, window.innerWidth/window.innerHeight, 0.1, 100);
+    cam.position.z = 14;
+
+    scene.add(new THREE.AmbientLight(0xffffff, .72));
+    const key = new THREE.DirectionalLight(0xffffff, .95); key.position.set(4,7,9); scene.add(key);
+    const rim = new THREE.DirectionalLight(0xE8A020, .55); rim.position.set(-6,-3,4); scene.add(rim);
+
+    const geoKoin  = new THREE.CylinderGeometry(1, 1, .17, 30);
+    const geoKartu = new THREE.BoxGeometry(2.3, 1.5, .12);
+    const emas = new THREE.MeshPhongMaterial({color:0xE8A020, shininess:70, specular:0x5a3d05});
+    const hijau= new THREE.MeshPhongMaterial({color:0x0D4F45, shininess:45, specular:0x123f38});
+    const krem = new THREE.MeshPhongMaterial({color:0xDCEBE6, shininess:30});
+
+    const resep = [
+      {g:geoKoin,  m:emas,  p:[-5.2, 3.6,-2], s:1.0},
+      {g:geoKoin,  m:emas,  p:[ 5.6, 1.2,-4], s:.75},
+      {g:geoKoin,  m:emas,  p:[-4.4,-4.2,-5], s:.6},
+      {g:geoKartu, m:hijau, p:[ 4.6, 4.6,-3], s:1.0},
+      {g:geoKartu, m:krem,  p:[-6.0,-.6,-6], s:.9},
+      {g:geoKoin,  m:hijau, p:[ 2.4,-5.0,-4], s:.8}
+    ];
+    benda = resep.map((r,i)=>{
+      const mesh = new THREE.Mesh(r.g, r.m);
+      mesh.position.set(r.p[0], r.p[1], r.p[2]);
+      mesh.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*.5);
+      mesh.scale.setScalar(r.s);
+      mesh.userData = {y0:r.p[1], spd:.18+ i*.045, amp:.32+ (i%3)*.12, par:.0016 + i*.0004};
+      scene.add(mesh);
+      return mesh;
+    });
+
+    hidup = true; t0 = performance.now();
+    window.addEventListener('resize', onResize, {passive:true});
+    window.addEventListener('scroll', onScroll, {passive:true});
+    document.addEventListener('visibilitychange', onVis);
+    loop();
+  }
+
+  function onResize(){
+    if(!hidup) return;
+    cam.aspect = window.innerWidth/window.innerHeight;
+    cam.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight, false);
+  }
+  function onScroll(){ targetScroll = window.scrollY || 0; }
+  function onVis(){ if(document.hidden){ cancelAnimationFrame(raf); raf=0; } else if(hidup && !raf){ loop(); } }
+
+  function loop(){
+    raf = requestAnimationFrame(loop);
+    // scroll diperhalus: kejar target pelan-pelan, jadi gerakannya meluncur
+    curScroll += (targetScroll - curScroll) * .075;
+    const t = (performance.now() - t0) / 1000;
+    for(const b of benda){
+      const u = b.userData;
+      b.position.y = u.y0 + Math.sin(t*u.spd*2.1) * u.amp - curScroll * u.par;
+      b.rotation.y += .0022 + u.spd*.0016;
+      b.rotation.x += .0011;
+    }
+    cam.position.y = -curScroll * .0012;
+    renderer.render(scene, cam);
+  }
+
+  function stop(){
+    if(!hidup) return;
+    cancelAnimationFrame(raf); raf = 0; hidup = false;
+    window.removeEventListener('resize', onResize);
+    window.removeEventListener('scroll', onScroll);
+    document.removeEventListener('visibilitychange', onVis);
+    benda.forEach(b=>scene.remove(b)); benda = [];
+    try{ renderer.dispose(); }catch(e){}
+    renderer = scene = cam = null;
+  }
+  return { start, stop, get hidup(){ return hidup; } };
+})();
+
 /* =====================================================================
    ROUTER
    ===================================================================== */
@@ -1337,6 +1654,9 @@ function render(){
   }
   if(!pindah && Math.abs(window.scrollY - sy) > 1) window.scrollTo({top:sy, behavior:'auto'});
   if(pindah) window.scrollTo({top:0, behavior:'auto'});
+  // latar 3D cuma di halaman depan; layar lain harus ringan & fokus ke data
+  if(S.route === 'landing'){ requestAnimationFrame(()=>Bg3D.start()); }
+  else if(Bg3D.hidup){ Bg3D.stop(); }
 }
 function go(route){ S.route=route; S.page=null; S.sheet=null; render(); }
 function openTab(t){ S.tab=t; S.page=null; S.sheet=null; S.period=null; render(); }
@@ -1367,6 +1687,23 @@ function afterLogin(){
 /* =====================================================================
    AKSI
    ===================================================================== */
+/* Umpan balik tekan: tombol memantul balik sesudah dilepas.
+   Ditaruh di listener terpisah supaya animasi jalan lebih dulu,
+   tidak menunggu aksi datanya selesai. */
+document.addEventListener('pointerdown', (ev)=>{
+  const b = ev.target.closest('.press, .fab, .btn, .chip, .paytap');
+  if(!b) return;
+  b.classList.remove('pushed');
+  const lepas = ()=>{
+    b.classList.add('pushed');
+    setTimeout(()=>b.classList.remove('pushed'), 380);
+    b.removeEventListener('pointerup', lepas);
+    b.removeEventListener('pointerleave', lepas);
+  };
+  b.addEventListener('pointerup', lepas);
+  b.addEventListener('pointerleave', lepas);
+}, {passive:true});
+
 document.addEventListener('click', async (ev)=>{
   const el = ev.target.closest('[data-a]');
   if(!el) return;
@@ -1381,7 +1718,7 @@ document.addEventListener('click', async (ev)=>{
     case 'tab': openTab(v); return;
     case 'page': S.page=v; S.sheet=null; render(); return;
     case 'per': S.period = pShift(S.period||thisPeriod(), +v); render(); return;
-    case 'sheet': S.sheet={name:v, id:id||null}; renderLayer(); return;
+    case 'sheet': S.sheet={name:v, id:id||null}; if(v==='checkout') S.step=1; renderLayer(); return;
     case 'rules-ok': S.rulesPopup=false; renderLayer(); return;
     case 'keluar': { stopRealtime(); await sb.auth.signOut(); DB={houses:{},session:{}}; go('landing'); return; }
 
@@ -1499,6 +1836,13 @@ document.addEventListener('click', async (ev)=>{
     }
 
     /* ---- belanja cepat ---- */
+    case 'co-step': S.step = +v; renderLayer(); return;
+    case 'salin-rek': {
+      const t = BAYAR.rekening;
+      try{ navigator.clipboard.writeText(t); toast('Nomor rekening disalin.'); }
+      catch(e){ toast('Nomor: ' + t); }
+      return;
+    }
     case 'pilih-kat': S.kat = v; if(S.sheet) renderLayer(); else render(); return;
     case 'q-simpan': {
       const p = S.period || thisPeriod();
