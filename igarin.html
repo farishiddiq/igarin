@@ -277,65 +277,102 @@ tr.total td{font-weight:700;border-top:2px solid var(--ink);border-bottom:0}
 <body>
 <div id="app"></div>
 <div id="layer"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 /* =====================================================================
    IGARIN — buku kas rumah sewa mahasiswa
-   Data disimpan lewat window.storage (persisten). Bila tidak tersedia,
-   aplikasi tetap jalan memakai memori sesi.
+   Data disimpan sungguhan di Supabase (Postgres + Auth + Realtime).
+   Lihat igarin-supabase.sql dan igarin-supabase-part2.sql untuk skemanya.
    ===================================================================== */
-const KEY = 'igarin:v1';
+const SUPABASE_URL = 'https://mlowsqxwvpejpxewdwrh.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_221A2i1lT8Gxkt49RIhoRQ_3RsyZ_QS';
+const EMAIL_DOMAIN = 'igarin.local';   // login rumah pakai username, bukan email asli
 const HARGA_IDR = 149000;
 const RANGE = [1200, 3500];
 const KAT_DEFAULT = ['Dapur','Listrik','Air','Gas','Internet','Kebersihan','Sewa','Lain-lain'];
 const IURAN_DEFAULT = [
-  {id:'i1', nama:'Sewa (ijar)', nominal:750},
-  {id:'i2', nama:'Listrik (kahraba)', nominal:150},
-  {id:'i3', nama:'Air', nominal:50},
-  {id:'i4', nama:'Gas', nominal:45},
-  {id:'i5', nama:'Dapur', nominal:500},
-  {id:'i6', nama:'Internet', nominal:70},
+  {nama:'Sewa (ijar)', nominal:750}, {nama:'Listrik (kahraba)', nominal:150}, {nama:'Air', nominal:50},
+  {nama:'Gas', nominal:45}, {nama:'Dapur', nominal:500}, {nama:'Internet', nominal:70},
 ];
 
-let DB = null;                 // { codes, houses, sales, session }
-let S  = { route:'landing', tab:'beranda', period:null, filter:'semua', pending:{} };
-let memOnly = false;
+// Claude tidak mengizinkan artifact memakai localStorage, jadi sesi login
+// di sini disimpan di memori (hilang saat halaman di-refresh di dalam
+// Claude). SETELAH kamu deploy file ini ke Vercel/Netlify/hosting sendiri
+// (lihat roadmap), ganti baris `storage: memoryStorage` di bawah jadi
+// `storage: window.localStorage` supaya orang tetap login saat buka app lagi.
+const memoryStorage = (()=>{ const m={}; return {
+  getItem:k=> (k in m? m[k] : null), setItem:(k,v)=>{m[k]=v;}, removeItem:k=>{delete m[k];}
+};})();
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession:true, autoRefreshToken:true, storage: memoryStorage }
+});
+const emailFor = u => `${String(u).trim().toLowerCase()}@${EMAIL_DOMAIN}`;
 
-/* ---------- storage ---------- */
-async function load(){
-  try{
-    const r = await window.storage.get(KEY);
-    DB = JSON.parse(r.value);
-  }catch(e){
-    DB = null;
-  }
-  if(!DB || !DB.houses){ DB = seed(); await save(); }
-  if(!DB.session) DB.session = {};
+let DB = { houses:{}, session:{} };   // cache lokal hasil dari Supabase, bentuknya tetap sama seperti sebelumnya
+let S  = { route:'landing', tab:'beranda', period:null, filter:'semua', pending:{} };
+let realtimeChannel = null;
+let stokTersedia = null;   // diisi async saat boot, dipakai vLanding()
+
+/* ---------- helper Supabase ---------- */
+async function insertRow(table, row){ const {error} = await sb.from(table).insert(row); if(error) throw error; }
+async function updateRow(table, id, patch){ const {error} = await sb.from(table).update(patch).eq('id', id); if(error) throw error; }
+async function deleteRow(table, id){ const {error} = await sb.from(table).delete().eq('id', id); if(error) throw error; }
+async function catatLog(nama, aksi, tabel){
+  const h = house(); if(!h) return;
+  try{ await insertRow('activity_log', {house_id:h.id, member_nama:nama||'—', aksi, tabel_terkait:tabel}); }
+  catch(e){ /* jejak aktivitas tidak fatal kalau gagal */ }
 }
-let saveTimer = null;
-async function save(){
-  if(memOnly) return;
-  clearTimeout(saveTimer);
-  return new Promise(res=>{
-    saveTimer = setTimeout(async()=>{
-      try{ await window.storage.set(KEY, JSON.stringify(DB)); }
-      catch(e){ memOnly = true; toast('Penyimpanan tidak tersedia — data hanya tersimpan di sesi ini.'); }
-      res();
-    }, 120);
+// Bungkus tiap aksi simpan: jalankan panggilan Supabase, lalu muat ulang cache dari server.
+// Kalau gagal (mis. jaringan putus, RLS menolak), tampilkan pesan tanpa mengubah tampilan.
+async function doAction(fn){
+  try{ await fn(); await reloadHouse(); return true; }
+  catch(e){ ferr(e && e.message ? e.message : 'Gagal menyimpan, coba lagi.'); return false; }
+}
+
+/* ---------- ambil & petakan data rumah dari Supabase ---------- */
+function normalize(bundle, username){
+  const hh = bundle.house;
+  return {
+    id: hh.id, nama: hh.nama_rumah, kontak: hh.kontak||'', kodeAktivasi: hh.kode_aktivasi,
+    tanggalAktivasi: hh.tanggal_aktivasi, status: hh.status,
+    auth: { username },
+    setting: {
+      waktuPenagihan: hh.waktu_penagihan, popupFreq: hh.popup_freq, saldoAwal: +hh.saldo_awal||0,
+      kategori: hh.kategori || KAT_DEFAULT.slice(),
+      iuranTypes: (bundle.iuran_types||[]).map(x=>({id:x.id, nama:x.nama_iuran, nominal:+x.nominal_default}))
+    },
+    members: (bundle.members||[]).map(m=>({id:m.id, nama:m.nama, kamar:m.no_kamar, status:m.status, tglGabung:m.tanggal_gabung, tglKeluar:m.tanggal_keluar})),
+    payments: (bundle.payments||[]).map(p=>({id:p.id, memberId:p.member_id, period:p.periode, nominal:+p.nominal, status:p.status_bayar, tanggal:p.tanggal_bayar, dicatatOleh:p.dicatat_oleh})),
+    expenses: (bundle.expenses||[]).map(e=>({id:e.id, tanggal:e.tanggal, kategori:e.kategori, deskripsi:e.deskripsi, nominal:+e.nominal, besar:e.is_besar, dicatatOleh:e.dicatat_oleh, bukti:e.bukti_foto_url||''})),
+    planned: (bundle.planned_expenses||[]).map(x=>({id:x.id, tanggalRencana:x.tanggal_rencana, deskripsi:x.deskripsi, estimasi:+x.estimasi_nominal, status:x.status})),
+    rules: (bundle.house_rules||[]).map(r=>({id:r.id, teks:r.deskripsi, urutan:r.urutan, aktif:r.aktif})),
+    log: (bundle.activity_log||[]).map(l=>({id:l.id, nama:l.member_nama, aksi:l.aksi, tabel:l.tabel_terkait, ts:l.created_at})),
+    closed: (bundle.periods||[]).filter(p=>p.status==='tertutup').map(p=>`${p.tahun}-${String(p.bulan).padStart(2,'0')}`)
+  };
+}
+async function reloadHouse(){
+  const { data: bundle, error } = await sb.rpc('get_house_bundle');
+  if(error || !bundle) throw error || new Error('Rumah tidak ditemukan.');
+  const { data:{ user } } = await sb.auth.getUser();
+  const username = user ? user.email.split('@')[0] : '';
+  const h = normalize(bundle, username);
+  DB.houses = { [h.id]: h };
+  DB.session.houseId = h.id;
+  subscribeRealtime(h.id);
+}
+function subscribeRealtime(houseId){
+  if(realtimeChannel){ sb.removeChannel(realtimeChannel); realtimeChannel = null; }
+  let t = null;
+  const kick = () => { clearTimeout(t); t = setTimeout(async()=>{ try{ await reloadHouse(); render(); }catch(e){} }, 500); };
+  const ch = sb.channel('house-'+houseId);
+  ['payments','expenses','members','house_rules','planned_expenses','iuran_types','periods'].forEach(tbl=>{
+    ch.on('postgres_changes', {event:'*', schema:'public', table:tbl, filter:`house_id=eq.${houseId}`}, kick);
   });
+  ch.on('postgres_changes', {event:'*', schema:'public', table:'houses', filter:`id=eq.${houseId}`}, kick);
+  ch.subscribe();
+  realtimeChannel = ch;
 }
-function seed(){
-  return { codes: genCodes(300), houses:{}, sales:[], session:{}, ownerUnlocked:false };
-}
-function genCodes(n){
-  const out = [], seen = new Set();
-  while(out.length < n){
-    const k = String(Math.floor(100000000 + Math.random()*899999999));
-    if(seen.has(k)) continue;
-    seen.add(k);
-    out.push({ kode:k, status:'tersedia', houseId:null, tglGenerate:today(), tglTerpakai:null, batch:1 });
-  }
-  return out;
-}
+function stopRealtime(){ if(realtimeChannel){ sb.removeChannel(realtimeChannel); realtimeChannel=null; } }
 
 /* ---------- util ---------- */
 const uid = () => Math.random().toString(36).slice(2,10);
@@ -351,22 +388,11 @@ function pShort(p){ const [y,m]=p.split('-'); return BULAN[+m-1].slice(0,3) + ' 
 function pShift(p, d){ const [y,m]=p.split('-').map(Number); const dt=new Date(y, m-1+d, 1); return dt.toISOString().slice(0,7); }
 function dLabel(d){ if(!d) return '—'; const [y,m,dd]=d.split('-'); return `${+dd} ${BULAN[+m-1].slice(0,3)} ${y}`; }
 function initials(n){ return String(n||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
-async function sha(t){
-  try{
-    const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('igarin$'+t));
-    return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
-  }catch(e){ return 'plain$'+t; }
-}
 function house(){ return DB.houses[DB.session.houseId] || null; }
 function toast(msg){
   const old = document.querySelector('.toast'); if(old) old.remove();
   const t = document.createElement('div'); t.className='toast'; t.setAttribute('role','status'); t.textContent = msg;
   document.body.appendChild(t); setTimeout(()=>t.remove(), 3000);
-}
-function logAct(nama, aksi, tabel){
-  const h = house(); if(!h) return;
-  h.log.unshift({id:uid(), nama:nama||'—', aksi, tabel, ts:new Date().toISOString()});
-  h.log = h.log.slice(0,300);
 }
 const ICON = {
   home:'<path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/>',
@@ -471,7 +497,6 @@ function sparkline(rows){
    TAMPILAN LUAR: landing, aktivasi, masuk, panel pemilik
    ===================================================================== */
 function vLanding(){
-  const terjual = DB.codes.filter(c=>c.status==='terpakai').length;
   return `<div class="land">
     <div class="brand"><span class="mark">ig</span> Igarin</div>
 
@@ -482,7 +507,7 @@ function vLanding(){
       <div class="row">
         <div class="sp">
           <div class="price"><b>${idr(HARGA_IDR)}</b><span class="muted">/ rumah</span></div>
-          <div class="tiny">Sekali bayar, akses selamanya. ${300-terjual} dari 300 kode masih tersedia.</div>
+          <div class="tiny">Sekali bayar, akses selamanya.${stokTersedia==null?'':` ${stokTersedia} dari 300 kode masih tersedia.`}</div>
         </div>
       </div>
       <div class="hair"></div>
@@ -553,7 +578,7 @@ function vMasuk(){
 
 /* ---------- panel pemilik ---------- */
 function vOwner(){
-  if(!DB.ownerUnlocked){
+  if(!S.owner){
     return `<div class="land">
       <button class="btn ghost sm" data-a="go" data-v="landing">← Kembali</button>
       <h1 style="font-size:1.7rem">Panel pemilik</h1>
@@ -562,36 +587,34 @@ function vOwner(){
         <label class="f"><span>Kata sandi pemilik</span><input id="ownpass" type="password" placeholder="igarin2026"></label>
         <div id="err-own" class="err" hidden></div>
         <button class="btn block" data-a="owner-unlock">Buka panel</button>
-        <p class="tiny mt-s">Sandi bawaan demo: igarin2026 — ganti di baris OWNER_PASS pada kode sumber.</p>
+        <p class="tiny mt-s">Sandi bawaan: igarin2026 — ganti lewat <code>select set_owner_passcode('sandi-barumu');</code> di SQL Editor Supabase.</p>
       </div></div>`;
   }
-  const c = DB.codes;
-  const terpakai = c.filter(x=>x.status==='terpakai');
-  const tersedia = c.length - terpakai.length;
-  const rev = terpakai.length * HARGA_IDR;
+  const o = S.owner, c = o.codes||[];
+  const rev = o.terjual * HARGA_IDR;
   const f = S.filter;
-  const rows = c.filter(x=> f==='semua' ? true : x.status===f).slice(0, 60).map(x=>`<tr>
-      <td class="num">${x.kode}</td>
+  const rows = c.filter(x=> f==='semua' ? true : x.status===f).slice(0, 80).map(x=>`<tr>
+      <td class="num">${esc(x.kode)}</td>
       <td>${x.status==='terpakai'? '<span class="badge no">terpakai</span>':'<span class="badge ok">tersedia</span>'}</td>
-      <td>${x.houseId && DB.houses[x.houseId] ? esc(DB.houses[x.houseId].nama) : '—'}</td>
-      <td>${x.tglTerpakai? dLabel(x.tglTerpakai):'—'}</td>
+      <td>${x.nama_rumah? esc(x.nama_rumah) : '—'}</td>
+      <td>${x.tgl_terpakai? dLabel(x.tgl_terpakai):'—'}</td>
       <td class="n">${x.batch}</td></tr>`).join('');
-  const sales = (DB.sales||[]).map(s=>`<div class="item"><div class="body"><b>${esc(s.nama)}</b>
-      <span>${esc(s.kontak||'—')} · kode ${s.kode} · ${dLabel(s.tanggal)}</span></div>
+  const sales = (o.sales||[]).map(s=>`<div class="item"><div class="body"><b>${esc(s.nama)}</b>
+      <span>${esc(s.kontak||'—')} · kode ${esc(s.kode)} · ${dLabel(s.tanggal)}</span></div>
       <div class="val">${idr(s.nominal)}</div></div>`).join('') || '<div class="empty">Belum ada transaksi dicatat.</div>';
   return `<div class="shell narrow" style="padding-top:18px">
     <div class="row"><button class="btn ghost sm" data-a="go" data-v="landing">← Keluar panel</button></div>
     <h1 class="mt">Panel pemilik</h1>
     <div class="grid two mt">
       <div class="card tight"><div class="tiny">Pendapatan tercatat</div><div class="display" style="font-size:1.5rem">${idr(rev)}</div>
-        <div class="tiny">${terpakai.length} rumah aktif × ${idr(HARGA_IDR)}</div></div>
-      <div class="card tight"><div class="tiny">Sisa stok kode</div><div class="display" style="font-size:1.5rem">${tersedia}</div>
-        <div class="tiny">dari total ${c.length} kode</div></div>
+        <div class="tiny">${o.terjual} rumah aktif × ${idr(HARGA_IDR)}</div></div>
+      <div class="card tight"><div class="tiny">Sisa stok kode</div><div class="display" style="font-size:1.5rem">${o.tersedia}</div>
+        <div class="tiny">dari total ${o.total} kode</div></div>
     </div>
     <div class="row wrap mt">
       <button class="btn sm" data-a="own-batch">Generate 100 kode baru</button>
       <button class="btn soft sm" data-a="own-csv">Unduh kode (CSV)</button>
-      <button class="btn soft sm" data-a="own-sale">Catat penjualan manual</button>
+      <button class="btn soft sm" data-a="sheet" data-v="own-sale">Catat penjualan manual</button>
     </div>
     <div class="sec-head"><h2>Stok kode</h2></div>
     <div class="chips">
@@ -600,12 +623,11 @@ function vOwner(){
     <div class="card tight mt-s"><div class="tw"><table>
       <thead><tr><th>Kode</th><th>Status</th><th>Rumah</th><th>Terpakai</th><th class="n">Batch</th></tr></thead>
       <tbody>${rows}</tbody></table></div>
-      <p class="tiny mt-s">Menampilkan maksimal 60 baris. Gunakan filter atau unduh CSV untuk daftar penuh.</p></div>
+      <p class="tiny mt-s">Menampilkan maksimal 80 baris. Gunakan filter atau unduh CSV untuk daftar penuh.</p></div>
     <div class="sec-head"><h2>Riwayat verifikasi pembayaran</h2></div>
     <div class="card"><div class="list">${sales}</div></div>
   </div>`;
 }
-const OWNER_PASS = 'igarin2026';
 
 /* =====================================================================
    APLIKASI RUMAH
@@ -1115,11 +1137,11 @@ function renderLayer(){
       <p class="tiny mt-s">Beri tahu seluruh penghuni setelah diganti, karena akunnya dipakai bersama.</p>`);
   }
   else if(name==='own-sale'){
-    const free = DB.codes.filter(c=>c.status==='tersedia').slice(0,50);
+    const free = (S.owner&&S.owner.codes||[]).filter(c=>c.status==='tersedia').slice(0,50);
     L.innerHTML = sheet('Catat penjualan', `
       <label class="f"><span>Nama rumah / pembeli</span><input id="nama"></label>
       <label class="f"><span>Kontak</span><input id="kontak" placeholder="WhatsApp atau email"></label>
-      <label class="f"><span>Kode yang dikirim</span><select id="kode">${free.map(c=>`<option>${c.kode}</option>`).join('')}</select></label>
+      <label class="f"><span>Kode yang dikirim</span><select id="kode">${free.map(c=>`<option>${esc(c.kode)}</option>`).join('')}</select></label>
       <label class="f"><span>Nominal diterima (IDR)</span><input id="nominal" type="number" value="${HARGA_IDR}"></label>
       <div id="err-f" class="err" hidden></div>
       <button class="btn block" data-a="sv-sale">Simpan</button>
@@ -1180,72 +1202,86 @@ function maybePopup(){
   S.rulesPopup = true;
 }
 
-/* ---------- data rumah baru ---------- */
-function newHouse(kode, nama, kontak, username, passHash){
-  const id = uid();
-  DB.houses[id] = {
-    id, nama, kontak, kodeAktivasi:kode, tanggalAktivasi:today(), status:'aktif',
-    auth:{username, passHash},
-    setting:{ waktuPenagihan:'awal', popupFreq:'harian', saldoAwal:0,
-      kategori:KAT_DEFAULT.slice(), iuranTypes:IURAN_DEFAULT.map(x=>({...x})) },
-    members:[], payments:[], expenses:[], planned:[], rules:[], log:[], closed:[]
-  };
-  const c = DB.codes.find(x=>x.kode===kode);
-  if(c){ c.status='terpakai'; c.houseId=id; c.tglTerpakai=today(); }
-  DB.session.houseId = id;
-  return DB.houses[id];
+/* ---------- akun & aktivasi rumah ---------- */
+async function signUpAndSignIn(username, password){
+  const email = emailFor(username);
+  const { error: e1 } = await sb.auth.signUp({ email, password });
+  if(e1 && !/registered/i.test(e1.message)) throw e1;
+  const { data, error: e2 } = await sb.auth.signInWithPassword({ email, password });
+  if(e2) throw new Error('Akun dibuat tapi belum bisa masuk otomatis — pastikan "Confirm email" dimatikan di Supabase Authentication settings, lalu coba masuk manual.');
+  return data;
 }
 
-/* ---------- rumah contoh ---------- */
-function seedDemo(){
-  const c = DB.codes.find(x=>x.status==='tersedia');
-  const h = newHouse(c.kode, 'Rumah Hay El-Asher 12', '+20 10 2233 4455', 'demo', 'plain$demo');
-  h.setting.saldoAwal = 1800;
-  const nama = ['Fikri','Ahmad Ridwan','Naufal','Hilmi','Zaki','Bagas'];
-  h.members = nama.map((n,i)=>({ id:uid(), nama:n, kamar:String(Math.ceil((i+1)/2)),
-    status: i===5?'cuti':'aktif', tglGabung:'2025-09-01', tglKeluar:null }));
-  h.setting.iuranTypes = IURAN_DEFAULT.map(x=>({...x}));
-  const t = tagihan(h);
+/* ---------- rumah contoh (demo) ---------- */
+async function seedDemo(){
+  await signUpAndSignIn('demo', 'demo123456');
+  const { data: houseId, error } = await sb.rpc('redeem_demo_code', { p_nama:'Rumah Hay El-Asher 12 (contoh)', p_kontak:'+20 10 2233 4455' });
+  if(error) throw error;
+  await reloadHouse();
+  let h = house();
+  if(h.members.length) return;   // akun demo sudah pernah diisi sebelumnya
+
+  await updateRow('houses', h.id, { saldo_awal: 1800 });
+  const namaAnggota = ['Fikri','Ahmad Ridwan','Naufal','Hilmi','Zaki','Bagas'];
+  const { data: membersIns, error: eM } = await sb.from('members').insert(
+    namaAnggota.map((n,i)=>({ house_id:h.id, nama:n, no_kamar:String(Math.ceil((i+1)/2)),
+      status: i===5?'cuti':'aktif', tanggal_gabung:'2025-09-01' }))
+  ).select();
+  if(eM) throw eM;
+
+  const jenisDefault = IURAN_DEFAULT.map(x=>({ house_id:h.id, nama_iuran:x.nama, nominal_default:x.nominal }));
+  // hapus 6 jenis default bawaan redeem_code, ganti dengan set yang sama supaya nominal konsisten dgn simulasi
+  await sb.from('iuran_types').delete().eq('house_id', h.id);
+  await sb.from('iuran_types').insert(jenisDefault);
+
+  const t = jenisDefault.reduce((a,b)=>a+b.nominal,0);
   const per = lastPeriods(3);
+  const pays = [];
   per.forEach((p, pi)=>{
-    h.members.forEach((m,mi)=>{
+    membersIns.forEach((m,mi)=>{
       const skip = (pi===2 && (mi===2 || mi===5));
       const sebagian = (pi===2 && mi===3);
       if(skip) return;
-      h.payments.push({ id:uid(), memberId:m.id, period:p,
-        nominal: sebagian? Math.round(t*0.6) : t,
-        status:'lunas', tanggal: p+'-0'+((mi%5)+2), dicatatOleh: nama[(mi+1)%4] });
+      pays.push({ house_id:h.id, member_id:m.id, periode:p, nominal: sebagian? Math.round(t*0.6) : t,
+        tanggal_bayar: p+'-0'+((mi%5)+2), dicatat_oleh: namaAnggota[(mi+1)%4] });
     });
   });
+  await sb.from('payments').insert(pays);
+
   const belanja = [
     ['Dapur','Beras 10 kg + minyak',520],['Dapur','Sayur & ayam pasar',380],['Dapur','Gula, teh, telur',240],
     ['Listrik','Bayar kahraba',870],['Air','Tagihan air',310],['Gas','Isi tabung gas',260],
     ['Internet','Wifi bulanan',400],['Kebersihan','Sabun, pembersih lantai',150],
     ['Sewa','Ijar bulanan ke pemilik',4500],['Lain-lain','Ongkos taksi angkut barang',120]
   ];
+  const exps = [];
   per.forEach((p, pi)=>{
     belanja.forEach((b,i)=>{
       if(pi===2 && i>6) return;
-      h.expenses.push({ id:uid(), tanggal:p+'-'+String(3+((i*2)%24)).padStart(2,'0'),
+      exps.push({ house_id:h.id, tanggal:p+'-'+String(3+((i*2)%24)).padStart(2,'0'),
         kategori:b[0], deskripsi:b[1], nominal: Math.round(b[2]*(0.9+((i+pi)%4)*0.06)),
-        besar:false, dicatatOleh:nama[i%5], bukti:'' });
+        is_besar:false, dicatat_oleh:namaAnggota[i%5] });
     });
   });
-  h.expenses.push({id:uid(), tanggal:per[1]+'-18', kategori:'Lain-lain', deskripsi:'Servis AC ruang tengah', nominal:1450, besar:true, dicatatOleh:'Hilmi', bukti:''});
-  h.expenses.push({id:uid(), tanggal:per[2]+'-06', kategori:'Dapur', deskripsi:'Beli dispenser + galon', nominal:980, besar:true, dicatatOleh:'Fikri', bukti:''});
-  h.planned = [
-    {id:uid(), tanggalRencana: pShift(thisPeriod(),1)+'-05', deskripsi:'Ganti kasur kamar 3', estimasi:1200, status:'rencana'},
-    {id:uid(), tanggalRencana: pShift(thisPeriod(),1)+'-20', deskripsi:'Cat ulang dapur', estimasi:800, status:'rencana'}
-  ];
-  h.rules = [
+  exps.push({house_id:h.id, tanggal:per[1]+'-18', kategori:'Lain-lain', deskripsi:'Servis AC ruang tengah', nominal:1450, is_besar:true, dicatat_oleh:'Hilmi'});
+  exps.push({house_id:h.id, tanggal:per[2]+'-06', kategori:'Dapur', deskripsi:'Beli dispenser + galon', nominal:980, is_besar:true, dicatat_oleh:'Fikri'});
+  await sb.from('expenses').insert(exps);
+
+  await sb.from('planned_expenses').insert([
+    {house_id:h.id, tanggal_rencana: pShift(thisPeriod(),1)+'-05', deskripsi:'Ganti kasur kamar 3', estimasi_nominal:1200, dicatat_oleh:'Fikri'},
+    {house_id:h.id, tanggal_rencana: pShift(thisPeriod(),1)+'-20', deskripsi:'Cat ulang dapur', estimasi_nominal:800, dicatat_oleh:'Fikri'}
+  ]);
+
+  await sb.from('house_rules').insert([
     'Dilarang merokok di dalam rumah, silakan di balkon.',
     'Tamu menginap maksimal 3 hari, izin dulu ke grup rumah.',
     'Piket dapur sesuai jadwal, cuci alat masak setelah dipakai.',
     'Uang kas hanya dipakai untuk kebutuhan rumah, catat di app hari itu juga.',
     'Lampu dan AC dimatikan kalau kamar kosong.'
-  ].map((teks,i)=>({id:uid(), teks, urutan:i+1, aktif:true}));
-  h.log = [{id:uid(), nama:'Fikri', aksi:'Membuka rumah contoh', tabel:'houses', ts:new Date().toISOString()}];
-  DB.sales.push({nama:h.nama, kontak:h.kontak, kode:h.kodeAktivasi, nominal:HARGA_IDR, tanggal:today()});
+  ].map((teks,i)=>({house_id:h.id, deskripsi:teks, urutan:i+1, aktif:true})));
+
+  await catatLog('Fikri', 'Membuka rumah contoh', 'houses');
+  await reloadHouse();
 }
 
 /* =====================================================================
@@ -1265,69 +1301,89 @@ document.addEventListener('click', async (ev)=>{
     case 'page': S.page=v; S.sheet=null; window.scrollTo(0,0); render(); return;
     case 'per': S.period = pShift(S.period||thisPeriod(), +v); render(); return;
     case 'sheet': S.sheet={name:v, id:id||null}; renderLayer(); return;
-    case 'rules-ok': S.rulesPopup=false; renderLayer(); save(); return;
-    case 'keluar': DB.session.houseId=null; await save(); go('landing'); return;
+    case 'rules-ok': S.rulesPopup=false; renderLayer(); return;
+    case 'keluar': {
+      stopRealtime(); await sb.auth.signOut();
+      DB = { houses:{}, session:{} }; go('landing'); return;
+    }
 
     case 'demo': {
-      const ada = Object.values(DB.houses).find(x=>x.auth.username==='demo');
-      if(ada) DB.session.houseId = ada.id; else seedDemo();
-      await save(); S.route='app'; S.tab='beranda'; maybePopup(); render(); return;
+      try{ await seedDemo(); S.route='app'; S.tab='beranda'; maybePopup(); render(); }
+      catch(e){ toast(e.message || 'Gagal menyiapkan rumah contoh.'); }
+      return;
     }
     case 'aktivasi': {
       const kode = val('kode'), nama = val('nama'), kontak = val('kontak'), u = val('user'), p1 = val('pass'), p2 = val('pass2');
       const e = document.getElementById('err-kode');
       const show = m => { e.textContent=m; e.hidden=false; };
       e.hidden = true;
-      const c = DB.codes.find(x=>x.kode===kode);
       if(!/^\d{9}$/.test(kode)) return show('Kode harus 9 angka.');
-      if(!c || c.status!=='tersedia') return show('Kode tidak ditemukan atau sudah terpakai. Hubungi admin.');
       if(!nama) return show('Isi nama rumah.');
       if(!u || u.length<3) return show('Username minimal 3 karakter.');
-      if(Object.values(DB.houses).some(x=>x.auth.username===u)) return show('Username sudah dipakai rumah lain.');
       if(p1.length<6) return show('Password minimal 6 karakter.');
       if(p1!==p2) return show('Dua password belum sama.');
-      newHouse(kode, nama, kontak, u, await sha(p1));
-      DB.sales.push({nama, kontak, kode, nominal:HARGA_IDR, tanggal:today()});
-      await save();
-      S.route='app'; S.tab='setting'; render();
-      toast('Rumah aktif. Lanjut isi anggota dan nominal iuran.');
+      try{
+        await signUpAndSignIn(u, p1);
+        const { error } = await sb.rpc('redeem_code', { p_kode:kode, p_nama:nama, p_kontak:kontak });
+        if(error) throw error;
+        await reloadHouse();
+        S.route='app'; S.tab='setting'; render();
+        toast('Rumah aktif. Lanjut isi anggota dan nominal iuran.');
+      }catch(err){
+        show(err.message && /registered/i.test(err.message) ? 'Username sudah dipakai rumah lain.'
+          : (err.message || 'Kode tidak ditemukan atau sudah terpakai. Hubungi admin.'));
+      }
       return;
     }
     case 'masuk': {
       const u = val('user'), p = val('pass');
       const e = document.getElementById('err-login'); e.hidden=true;
-      const hh = Object.values(DB.houses).find(x=>x.auth.username===u);
-      const ok = hh && (hh.auth.passHash === await sha(p) || hh.auth.passHash === 'plain$'+p);
-      if(!ok){ e.textContent='Username atau password salah.'; e.hidden=false; return; }
-      DB.session.houseId = hh.id; await save();
-      S.route='app'; S.tab='beranda'; maybePopup(); render(); return;
+      try{
+        const { error } = await sb.auth.signInWithPassword({ email: emailFor(u), password: p });
+        if(error) throw error;
+        await reloadHouse();
+        S.route='app'; S.tab='beranda'; maybePopup(); render();
+      }catch(err){ e.textContent='Username atau password salah.'; e.hidden=false; }
+      return;
     }
 
     /* ---- panel pemilik ---- */
     case 'owner-unlock': {
-      if(val('ownpass')!==OWNER_PASS){ const e=document.getElementById('err-own'); e.textContent='Sandi salah.'; e.hidden=false; return; }
-      DB.ownerUnlocked = true; await save(); render(); return;
+      const pass = val('ownpass');
+      try{
+        const { data, error } = await sb.rpc('owner_bundle', { p_passcode: pass });
+        if(error) throw error;
+        S.owner = data; S.ownerPass = pass; render();
+      }catch(err){ const e=document.getElementById('err-own'); e.textContent='Sandi salah.'; e.hidden=false; }
+      return;
     }
     case 'own-filter': S.filter=v; render(); return;
     case 'own-batch': {
-      const batch = Math.max(...DB.codes.map(c=>c.batch)) + 1;
-      const baru = genCodes(100).map(c=>({...c, batch}));
-      DB.codes = DB.codes.concat(baru); await save(); render();
-      toast('100 kode batch ' + batch + ' ditambahkan.'); return;
+      try{
+        const { data:n, error } = await sb.rpc('owner_generate_codes', { p_passcode:S.ownerPass, p_n:100 });
+        if(error) throw error;
+        const { data } = await sb.rpc('owner_bundle', { p_passcode:S.ownerPass });
+        S.owner = data; render();
+        toast(n + ' kode baru ditambahkan.');
+      }catch(err){ toast(err.message); }
+      return;
     }
     case 'own-csv': {
       const rows = [['kode','status','rumah','tanggal_terpakai','batch']].concat(
-        DB.codes.map(c=>[c.kode, c.status, c.houseId&&DB.houses[c.houseId]?DB.houses[c.houseId].nama:'', c.tglTerpakai||'', c.batch]));
+        (S.owner.codes||[]).map(c=>[c.kode, c.status, c.nama_rumah||'', c.tgl_terpakai||'', c.batch]));
       unduh('igarin-kode.csv', rows.map(r=>r.join(',')).join('\n')); return;
     }
-    case 'own-sale': S.sheet={name:'own-sale'}; renderLayer(); return;
     case 'sv-sale': {
       const nama=val('nama'); if(!nama) return ferr('Isi nama pembeli.');
-      const kode=val('kode');
-      DB.sales.push({nama, kontak:val('kontak'), kode, nominal:num('nominal'), tanggal:today()});
-      const c = DB.codes.find(x=>x.kode===kode);
-      if(c){ c.status='terpakai'; c.tglTerpakai=today(); }
-      await save(); closeSheet(); render(); toast('Penjualan dicatat. Kirim kode ' + kode + ' ke pembeli.'); return;
+      const kode=val('kode'); if(!kode) return ferr('Tidak ada kode tersedia untuk dipilih.');
+      try{
+        const { error } = await sb.rpc('owner_record_sale', { p_passcode:S.ownerPass, p_nama:nama, p_kontak:val('kontak'), p_kode:kode, p_nominal:num('nominal') });
+        if(error) throw error;
+        const { data } = await sb.rpc('owner_bundle', { p_passcode:S.ownerPass });
+        S.owner = data; closeSheet(); render();
+        toast('Penjualan dicatat. Kirim kode ' + kode + ' ke pembeli.');
+      }catch(err){ ferr(err.message); }
+      return;
     }
 
     /* ---- iuran ---- */
@@ -1337,16 +1393,22 @@ document.addEventListener('click', async (ev)=>{
       const by = needBy(); if(!by) return;
       const mid = val('member'); if(!mid) return ferr('Pilih anggota.');
       const n = num('nominal'); if(n<=0) return ferr('Nominal harus lebih dari 0.');
-      h.payments.push({id:uid(), memberId:mid, period:p, nominal:n, status:'lunas', tanggal:val('tanggal')||today(), dicatatOleh:by});
       const m = h.members.find(x=>x.id===mid);
-      logAct(by, `Catat iuran ${m?m.nama:''} ${pShort(p)} ${nf.format(n)} EGP`, 'payments');
-      await save(); closeSheet(); render(); toast('Iuran tercatat.'); return;
+      const ok = await doAction(async()=>{
+        await insertRow('payments', {house_id:h.id, member_id:mid, periode:p, nominal:n, tanggal_bayar:val('tanggal')||today(), dicatat_oleh:by});
+        await catatLog(by, `Catat iuran ${m?m.nama:''} ${pShort(p)} ${nf.format(n)} EGP`, 'payments');
+      });
+      if(ok){ closeSheet(); render(); toast('Iuran tercatat.'); }
+      return;
     }
     case 'del-bayar': {
       const rec = h.payments.find(x=>x.id===id);
-      h.payments = h.payments.filter(x=>x.id!==id);
-      logAct(S.lastBy||'—', `Hapus catatan iuran ${nf.format(rec?rec.nominal:0)} EGP`, 'payments');
-      await save(); closeSheet(); render(); toast('Catatan dihapus.'); return;
+      const ok = await doAction(async()=>{
+        await deleteRow('payments', id);
+        await catatLog(S.lastBy||'—', `Hapus catatan iuran ${nf.format(rec?rec.nominal:0)} EGP`, 'payments');
+      });
+      if(ok){ closeSheet(); render(); toast('Catatan dihapus.'); }
+      return;
     }
 
     /* ---- pengeluaran ---- */
@@ -1356,77 +1418,108 @@ document.addEventListener('click', async (ev)=>{
       const by = needBy(); if(!by) return;
       const d = val('deskripsi'); if(!d) return ferr('Tulis pengeluaran ini untuk apa.');
       const n = num('nominal'); if(n<=0) return ferr('Nominal harus lebih dari 0.');
-      const data = {tanggal:tgl, kategori:val('kategori'), deskripsi:d, nominal:n, besar:chk('besar'), dicatatOleh:by, bukti:val('bukti')};
-      if(id){ Object.assign(h.expenses.find(x=>x.id===id), data); logAct(by, `Ubah pengeluaran ${d}`, 'expenses'); }
-      else { h.expenses.push({id:uid(), ...data}); logAct(by, `Catat pengeluaran ${d} ${nf.format(n)} EGP`, 'expenses'); }
-      await save(); closeSheet(); render(); toast('Pengeluaran tersimpan.'); return;
+      const data = {tanggal:tgl, kategori:val('kategori'), deskripsi:d, nominal:n, is_besar:chk('besar'), dicatat_oleh:by, bukti_foto_url:val('bukti')||null};
+      const ok = await doAction(async()=>{
+        if(id){ await updateRow('expenses', id, data); await catatLog(by, `Ubah pengeluaran ${d}`, 'expenses'); }
+        else { await insertRow('expenses', {house_id:h.id, ...data}); await catatLog(by, `Catat pengeluaran ${d} ${nf.format(n)} EGP`, 'expenses'); }
+      });
+      if(ok){ closeSheet(); render(); toast('Pengeluaran tersimpan.'); }
+      return;
     }
     case 'del-pengeluaran': {
       const rec = h.expenses.find(x=>x.id===id);
-      h.expenses = h.expenses.filter(x=>x.id!==id);
-      logAct(S.lastBy||'—', `Hapus pengeluaran ${rec?rec.deskripsi:''}`, 'expenses');
-      await save(); closeSheet(); render(); toast('Catatan dihapus.'); return;
+      const ok = await doAction(async()=>{
+        await deleteRow('expenses', id);
+        await catatLog(S.lastBy||'—', `Hapus pengeluaran ${rec?rec.deskripsi:''}`, 'expenses');
+      });
+      if(ok){ closeSheet(); render(); toast('Catatan dihapus.'); }
+      return;
     }
     case 'sv-rencana': {
       const by = needBy(); if(!by) return;
       const d = val('deskripsi'); if(!d) return ferr('Tulis rencananya.');
-      h.planned.push({id:uid(), tanggalRencana:val('tanggal')||today(), deskripsi:d, estimasi:num('nominal'), status:'rencana'});
-      logAct(by, `Tambah rencana ${d}`, 'planned_expenses');
-      await save(); closeSheet(); render(); toast('Rencana dicatat.'); return;
+      const ok = await doAction(async()=>{
+        await insertRow('planned_expenses', {house_id:h.id, tanggal_rencana:val('tanggal')||today(), deskripsi:d, estimasi_nominal:num('nominal'), dicatat_oleh:by});
+        await catatLog(by, `Tambah rencana ${d}`, 'planned_expenses');
+      });
+      if(ok){ closeSheet(); render(); toast('Rencana dicatat.'); }
+      return;
     }
     case 'sv-realisasi': {
       const by = needBy(); if(!by) return;
       const pl = h.planned.find(x=>x.id===id);
       const tgl = val('tanggal')||today();
       if(locked(h, tgl.slice(0,7))) return ferr('Buku periode itu ditutup.');
-      h.expenses.push({id:uid(), tanggal:tgl, kategori:val('kategori'), deskripsi:pl.deskripsi, nominal:num('nominal'), besar:chk('besar'), dicatatOleh:by, bukti:''});
-      pl.status='selesai';
-      logAct(by, `Realisasi rencana ${pl.deskripsi}`, 'expenses');
-      await save(); closeSheet(); render(); toast('Rencana jadi pengeluaran.'); return;
+      const ok = await doAction(async()=>{
+        await insertRow('expenses', {house_id:h.id, tanggal:tgl, kategori:val('kategori'), deskripsi:pl.deskripsi, nominal:num('nominal'), is_besar:chk('besar'), dicatat_oleh:by});
+        await updateRow('planned_expenses', id, {status:'selesai'});
+        await catatLog(by, `Realisasi rencana ${pl.deskripsi}`, 'expenses');
+      });
+      if(ok){ closeSheet(); render(); toast('Rencana jadi pengeluaran.'); }
+      return;
     }
     case 'hapus-rencana': {
-      h.planned = h.planned.filter(x=>x.id!==id);
-      logAct(S.lastBy||'—','Hapus rencana pengeluaran','planned_expenses');
-      await save(); render(); return;
+      const ok = await doAction(async()=>{
+        await deleteRow('planned_expenses', id);
+        await catatLog(S.lastBy||'—','Hapus rencana pengeluaran','planned_expenses');
+      });
+      if(ok) render();
+      return;
     }
 
     /* ---- anggota ---- */
     case 'sv-anggota': {
       const by = needBy(); if(!by) return;
       const nama = val('nama'); if(!nama) return ferr('Isi nama anggota.');
-      const data = {nama, kamar:val('kamar'), status:val('status'), tglGabung:val('gabung')||today(), tglKeluar:val('keluar')||null};
-      if(id){ Object.assign(h.members.find(x=>x.id===id), data); logAct(by, `Ubah data anggota ${nama}`, 'members'); }
-      else { h.members.push({id:uid(), ...data}); logAct(by, `Tambah anggota ${nama}`, 'members'); }
-      await save(); closeSheet(); render(); toast('Data anggota tersimpan.'); return;
+      const data = {nama, no_kamar:val('kamar')||null, status:val('status'), tanggal_gabung:val('gabung')||today(), tanggal_keluar:val('keluar')||null};
+      const ok = await doAction(async()=>{
+        if(id){ await updateRow('members', id, data); await catatLog(by, `Ubah data anggota ${nama}`, 'members'); }
+        else { await insertRow('members', {house_id:h.id, ...data}); await catatLog(by, `Tambah anggota ${nama}`, 'members'); }
+      });
+      if(ok){ closeSheet(); render(); toast('Data anggota tersimpan.'); }
+      return;
     }
     case 'del-anggota': {
       const rec = h.members.find(x=>x.id===id);
-      h.members = h.members.filter(x=>x.id!==id);
-      logAct(S.lastBy||'—', `Hapus anggota ${rec?rec.nama:''}`, 'members');
-      await save(); closeSheet(); render(); return;
+      const ok = await doAction(async()=>{
+        await deleteRow('members', id);
+        await catatLog(S.lastBy||'—', `Hapus anggota ${rec?rec.nama:''}`, 'members');
+      });
+      if(ok){ closeSheet(); render(); }
+      return;
     }
 
     /* ---- peraturan ---- */
     case 'sv-peraturan': {
       const by = needBy(); if(!by) return;
       const teks = val('teks'); if(!teks) return ferr('Tulis isi peraturannya.');
-      if(id){ const r=h.rules.find(x=>x.id===id); r.teks=teks; r.aktif=chk('aktif'); logAct(by,'Ubah peraturan rumah','house_rules'); }
-      else { h.rules.push({id:uid(), teks, aktif:chk('aktif'), urutan:(h.rules.length+1)}); logAct(by,'Tambah peraturan rumah','house_rules'); }
-      await save(); closeSheet(); render(); toast('Peraturan tersimpan.'); return;
+      const ok = await doAction(async()=>{
+        if(id){ await updateRow('house_rules', id, {deskripsi:teks, aktif:chk('aktif')}); await catatLog(by,'Ubah peraturan rumah','house_rules'); }
+        else { await insertRow('house_rules', {house_id:h.id, deskripsi:teks, aktif:chk('aktif'), urutan:(h.rules.length+1)}); await catatLog(by,'Tambah peraturan rumah','house_rules'); }
+      });
+      if(ok){ closeSheet(); render(); toast('Peraturan tersimpan.'); }
+      return;
     }
     case 'del-peraturan': {
-      h.rules = h.rules.filter(x=>x.id!==id);
-      h.rules.forEach((r,i)=>r.urutan=i+1);
-      logAct(S.lastBy||'—','Hapus peraturan rumah','house_rules');
-      await save(); closeSheet(); render(); return;
+      const ok = await doAction(async()=>{
+        await deleteRow('house_rules', id);
+        const sisa = h.rules.filter(x=>x.id!==id).sort((a,b)=>a.urutan-b.urutan);
+        await Promise.all(sisa.map((r,i)=> r.urutan!==i+1 ? updateRow('house_rules', r.id, {urutan:i+1}) : null));
+        await catatLog(S.lastBy||'—','Hapus peraturan rumah','house_rules');
+      });
+      if(ok){ closeSheet(); render(); }
+      return;
     }
     case 'rule-move': {
       const rs = h.rules.slice().sort((a,b)=>a.urutan-b.urutan);
       const i = rs.findIndex(x=>x.id===id), j = i + (+v);
       if(i<0||j<0||j>=rs.length) return;
-      [rs[i], rs[j]] = [rs[j], rs[i]];
-      rs.forEach((r,k)=>r.urutan=k+1);
-      await save(); render(); return;
+      const ok = await doAction(async()=>{
+        await updateRow('house_rules', rs[i].id, {urutan: rs[j].urutan});
+        await updateRow('house_rules', rs[j].id, {urutan: rs[i].urutan});
+      });
+      if(ok) render();
+      return;
     }
 
     /* ---- jenis iuran ---- */
@@ -1434,37 +1527,50 @@ document.addEventListener('click', async (ev)=>{
       const by = needBy(); if(!by) return;
       const nama = val('nama'); if(!nama) return ferr('Isi nama iuran.');
       const n = num('nominal');
-      if(id){ const j=h.setting.iuranTypes.find(x=>x.id===id); j.nama=nama; j.nominal=n; logAct(by,`Ubah iuran ${nama}`,'iuran_types'); }
-      else { h.setting.iuranTypes.push({id:uid(), nama, nominal:n}); logAct(by,`Tambah iuran ${nama}`,'iuran_types'); }
-      await save(); closeSheet(); render(); toast('Jenis iuran tersimpan.'); return;
+      const ok = await doAction(async()=>{
+        if(id){ await updateRow('iuran_types', id, {nama_iuran:nama, nominal_default:n}); await catatLog(by,`Ubah iuran ${nama}`,'iuran_types'); }
+        else { await insertRow('iuran_types', {house_id:h.id, nama_iuran:nama, nominal_default:n}); await catatLog(by,`Tambah iuran ${nama}`,'iuran_types'); }
+      });
+      if(ok){ closeSheet(); render(); toast('Jenis iuran tersimpan.'); }
+      return;
     }
     case 'del-jenis': {
-      h.setting.iuranTypes = h.setting.iuranTypes.filter(x=>x.id!==id);
-      logAct(S.lastBy||'—','Hapus jenis iuran','iuran_types');
-      await save(); closeSheet(); render(); return;
+      const ok = await doAction(async()=>{
+        await deleteRow('iuran_types', id);
+        await catatLog(S.lastBy||'—','Hapus jenis iuran','iuran_types');
+      });
+      if(ok){ closeSheet(); render(); }
+      return;
     }
 
     /* ---- kategori ---- */
     case 'kat-tambah': {
       const k = val('kat-baru'); if(!k) return;
-      if(!h.setting.kategori.includes(k)) h.setting.kategori.push(k);
-      await save(); render(); return;
+      if(h.setting.kategori.includes(k)) return;
+      const ok = await doAction(async()=>{ await updateRow('houses', h.id, {kategori: h.setting.kategori.concat(k)}); });
+      if(ok) render();
+      return;
     }
     case 'kat-hapus': {
-      h.setting.kategori = h.setting.kategori.filter(k=>k!==v);
-      await save(); render(); return;
+      const ok = await doAction(async()=>{ await updateRow('houses', h.id, {kategori: h.setting.kategori.filter(k=>k!==v)}); });
+      if(ok) render();
+      return;
     }
 
     /* ---- password ---- */
     case 'sv-pass': {
       const p0=val('p0'), p1=val('p1'), p2=val('p2');
-      const ok = h.auth.passHash === await sha(p0) || h.auth.passHash === 'plain$'+p0;
-      if(!ok) return ferr('Password lama salah.');
       if(p1.length<6) return ferr('Password baru minimal 6 karakter.');
       if(p1!==p2) return ferr('Dua password belum sama.');
-      h.auth.passHash = await sha(p1);
-      logAct(S.lastBy||'—','Ganti password rumah','houses');
-      await save(); closeSheet(); toast('Password diganti. Kabari penghuni lain.'); return;
+      try{
+        const { error: e1 } = await sb.auth.signInWithPassword({ email: emailFor(h.auth.username), password: p0 });
+        if(e1) return ferr('Password lama salah.');
+        const { error: e2 } = await sb.auth.updateUser({ password: p1 });
+        if(e2) throw e2;
+        await catatLog(S.lastBy||'—','Ganti password rumah','houses');
+        closeSheet(); toast('Password diganti. Kabari penghuni lain.');
+      }catch(err){ ferr(err.message || 'Gagal mengganti password.'); }
+      return;
     }
 
     /* ---- laporan ---- */
@@ -1481,10 +1587,15 @@ document.addEventListener('click', async (ev)=>{
     }
     case 'tutup-buku': {
       const p = S.period||thisPeriod();
-      h.closed = h.closed||[];
-      if(h.closed.includes(p)){ h.closed = h.closed.filter(x=>x!==p); toast('Buku ' + pLabel(p) + ' dibuka kembali.'); logAct(S.lastBy||'—',`Buka kembali buku ${pLabel(p)}`,'periods'); }
-      else { h.closed.push(p); toast('Buku ' + pLabel(p) + ' ditutup, data jadi read-only.'); logAct(S.lastBy||'—',`Tutup buku ${pLabel(p)}`,'periods'); }
-      await save(); render(); return;
+      const [y,m] = p.split('-').map(Number);
+      const akanTutup = !locked(h,p);
+      const ok = await doAction(async()=>{
+        const { error } = await sb.rpc('set_period_status', { p_bulan:m, p_tahun:y, p_status: akanTutup?'tertutup':'terbuka' });
+        if(error) throw error;
+        await catatLog(S.lastBy||'—', akanTutup? `Tutup buku ${pLabel(p)}` : `Buka kembali buku ${pLabel(p)}`, 'periods');
+      });
+      if(ok){ render(); toast(akanTutup? 'Buku ' + pLabel(p) + ' ditutup, data jadi read-only.' : 'Buku ' + pLabel(p) + ' dibuka kembali.'); }
+      return;
     }
 
     /* ---- simulasi ---- */
@@ -1497,11 +1608,17 @@ document.addEventListener('click', async (ev)=>{
     case 'sim-pakai': {
       const target = +v, h2 = house(), types = h2.setting.iuranTypes||[];
       const cur = tagihan(h2);
-      if(!types.length || !cur){ h2.setting.iuranTypes = [{id:uid(), nama:'Iuran bulanan', nominal:target}]; }
-      else { const f = target/cur; types.forEach(t=>t.nominal = Math.round(t.nominal*f)); }
-      logAct(S.lastBy||'—', `Set nominal iuran jadi ${nf.format(target)} EGP per orang`, 'iuran_types');
-      await save(); S.page=null; S.tab='iuran'; render();
-      toast('Nominal iuran diperbarui jadi ' + egp(target) + ' per orang.'); return;
+      const ok = await doAction(async()=>{
+        if(!types.length || !cur){
+          await insertRow('iuran_types', {house_id:h2.id, nama_iuran:'Iuran bulanan', nominal_default:target});
+        } else {
+          const f = target/cur;
+          await Promise.all(types.map(t=> updateRow('iuran_types', t.id, {nominal_default: Math.round(t.nominal*f)})));
+        }
+        await catatLog(S.lastBy||'—', `Set nominal iuran jadi ${nf.format(target)} EGP per orang`, 'iuran_types');
+      });
+      if(ok){ S.page=null; S.tab='iuran'; render(); toast('Nominal iuran diperbarui jadi ' + egp(target) + ' per orang.'); }
+      return;
     }
   }
 });
@@ -1511,11 +1628,11 @@ document.addEventListener('change', async (ev)=>{
   if(a==='sim-orang'){ S.sim.orang = Math.max(1, parseInt(el.value)||1); render(); }
   else if(a==='sim-item'){ S.sim.items[+el.dataset.i].v = parseFloat(el.value)||0; render(); }
   else if(a==='sim-iuran'){ S.sim.iuran = parseFloat(el.value)||0; render(); }
-  else if(a==='set-nama'){ h.nama = el.value.trim()||h.nama; await save(); render(); }
-  else if(a==='set-kontak'){ h.kontak = el.value.trim(); await save(); }
-  else if(a==='set-waktu'){ h.setting.waktuPenagihan = el.value; await save(); render(); }
-  else if(a==='set-saldo'){ h.setting.saldoAwal = parseFloat(el.value)||0; await save(); render(); }
-  else if(a==='set-popup'){ h.setting.popupFreq = el.value; await save(); render(); }
+  else if(a==='set-nama'){ const nv=el.value.trim()||h.nama; await doAction(()=>updateRow('houses', h.id, {nama_rumah:nv})); render(); }
+  else if(a==='set-kontak'){ await doAction(()=>updateRow('houses', h.id, {kontak: el.value.trim()})); }
+  else if(a==='set-waktu'){ await doAction(()=>updateRow('houses', h.id, {waktu_penagihan: el.value})); render(); }
+  else if(a==='set-saldo'){ await doAction(()=>updateRow('houses', h.id, {saldo_awal: parseFloat(el.value)||0})); render(); }
+  else if(a==='set-popup'){ await doAction(()=>updateRow('houses', h.id, {popup_freq: el.value})); render(); }
 });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ if(S.rulesPopup){S.rulesPopup=false;} S.sheet=null; renderLayer(); } });
 
@@ -1535,9 +1652,12 @@ function unduh(nama, teks){
 
 /* ---------- mulai ---------- */
 (async function(){
-  await load();
-  if(DB.session.houseId && DB.houses[DB.session.houseId]){ S.route='app'; S.tab='beranda'; maybePopup(); }
+  try{
+    const { data:{ session } } = await sb.auth.getSession();
+    if(session){ await reloadHouse(); S.route='app'; S.tab='beranda'; maybePopup(); }
+  }catch(e){ /* belum login / sesi kedaluwarsa, tetap tampil landing */ }
   render();
+  sb.rpc('stok_tersedia').then(({data,error})=>{ if(!error){ stokTersedia = data; if(S.route==='landing') render(); } });
 })();
 </script>
 </body>
