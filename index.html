@@ -295,16 +295,23 @@ const IURAN_DEFAULT = [
   {nama:'Gas', nominal:45}, {nama:'Dapur', nominal:500}, {nama:'Internet', nominal:70},
 ];
 
-// Claude tidak mengizinkan artifact memakai localStorage, jadi sesi login
-// di sini disimpan di memori (hilang saat halaman di-refresh di dalam
-// Claude). SETELAH kamu deploy file ini ke Vercel/Netlify/hosting sendiri
-// (lihat roadmap), ganti baris `storage: memoryStorage` di bawah jadi
-// `storage: window.localStorage` supaya orang tetap login saat buka app lagi.
-const memoryStorage = (()=>{ const m={}; return {
-  getItem:k=> (k in m? m[k] : null), setItem:(k,v)=>{m[k]=v;}, removeItem:k=>{delete m[k];}
-};})();
+// Sesi login disimpan di localStorage supaya penghuni tetap masuk saat app
+// dibuka lagi. Sebagian lingkungan (preview di dalam Claude, mode privasi
+// ketat, iframe terkunci) memblokir localStorage — di situ otomatis mundur
+// ke penyimpanan memori: app tetap jalan, hanya perlu login ulang tiap buka.
+const sessionStore = (()=>{
+  try{
+    const probe = '__igarin_test__';
+    window.localStorage.setItem(probe, '1');
+    window.localStorage.removeItem(probe);
+    return window.localStorage;
+  }catch(e){
+    const m = {};
+    return { getItem:k=> (k in m? m[k] : null), setItem:(k,v)=>{m[k]=v;}, removeItem:k=>{delete m[k];} };
+  }
+})();
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: { persistSession:true, autoRefreshToken:true, storage: memoryStorage }
+  auth: { persistSession:true, autoRefreshToken:true, storage: sessionStore }
 });
 const emailFor = u => `${String(u).trim().toLowerCase()}@${EMAIL_DOMAIN}`;
 
@@ -998,7 +1005,15 @@ function vLog(){
    ===================================================================== */
 function memberSelect(sel){
   const h = house();
-  const opts = aktif(h).map(m=>`<option value="${esc(m.nama)}" ${sel===m.nama?'selected':''}>${esc(m.nama)}</option>`).join('');
+  const ms = aktif(h);
+  // Rumah yang baru aktif belum punya anggota, jadi dropdown akan kosong dan
+  // anggota pertama mustahil ditambahkan. Untuk kasus itu, kolomnya jadi
+  // isian teks supaya orang bisa menulis namanya sendiri.
+  if(!ms.length){
+    return `<label class="f"><span>Dicatat oleh <span class="hint">tulis namamu — daftar anggota masih kosong</span></span>
+      <input id="by" value="${esc(sel||'')}" placeholder="Nama kamu" autocomplete="off"></label>`;
+  }
+  const opts = ms.map(m=>`<option value="${esc(m.nama)}" ${sel===m.nama?'selected':''}>${esc(m.nama)}</option>`).join('');
   return `<label class="f"><span>Dicatat oleh <span class="hint">wajib, karena akun dipakai bersama</span></span>
     <select id="by"><option value="">— pilih nama —</option>${opts}</select></label>`;
 }
@@ -1189,7 +1204,12 @@ const num = id => { const v=parseFloat(val(id)); return isNaN(v)?0:v; };
 const chk = id => { const el=document.getElementById(id); return !!(el&&el.checked); };
 function needBy(){
   const by = val('by');
-  if(!by){ ferr('Pilih dulu nama pencatat. Semua catatan harus ada penanggung jawabnya.'); return null; }
+  if(!by){
+    const el = document.getElementById('by');
+    const ketik = el && el.tagName === 'INPUT';
+    ferr((ketik? 'Tulis dulu nama pencatat.' : 'Pilih dulu nama pencatat.') + ' Semua catatan harus ada penanggung jawabnya.');
+    return null;
+  }
   S.lastBy = by; return by;
 }
 function maybePopup(){
