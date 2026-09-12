@@ -356,6 +356,36 @@ tr.tot td{font-weight:700;border-top:2px solid var(--ink);border-bottom:0}
   .co-list li{font-size:.84rem}
 }
 
+/* ---------- hold & dial ---------- */
+.no-scroll{overflow:hidden;touch-action:none}
+.dial-out{background:#fff;border:1.5px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--sh-1)}
+.dial-num{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:2.6rem;line-height:1.05;margin-top:2px}
+.dial-num i{font-style:normal;font-size:.95rem;font-weight:600;color:var(--ink-2);margin-left:8px;font-family:"Plus Jakarta Sans",sans-serif}
+.nudge{min-width:58px;font-variant-numeric:tabular-nums}
+.hold-pad{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:56px;margin-top:12px;
+  border:2px dashed var(--nil);border-radius:16px;background:var(--nil-pale);color:var(--nil);
+  font-weight:700;font-size:.9rem;touch-action:none;user-select:none;-webkit-user-select:none}
+.hold-pad svg{width:19px;height:19px;stroke-width:2}
+.hold-pad:active,.hold-pad.siap{background:var(--nil);color:#fff;border-style:solid}
+.hold-pad:active svg,.hold-pad.siap svg{stroke:#fff}
+
+.dial-wrap{position:fixed;inset:0;z-index:90;background:rgba(21,34,31,.22);animation:scrimIn .12s ease both;touch-action:none}
+.dial-card{position:absolute;top:0;left:0;min-width:186px;padding:14px 18px;border-radius:20px;
+  background:linear-gradient(160deg,#17695C,#0D4F45);color:#fff;text-align:center;
+  box-shadow:0 12px 34px -10px rgba(13,79,69,.85);animation:popIn .14s ease both;will-change:transform}
+.dial-big{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:2.3rem;line-height:1}
+.dial-big i{font-style:normal;font-size:.85rem;font-weight:600;opacity:.75;margin-left:6px;font-family:"Plus Jakarta Sans",sans-serif}
+.dial-steps{display:flex;gap:5px;justify-content:center;margin-top:9px}
+.dial-steps span{font-size:.7rem;font-weight:700;padding:4px 8px;border-radius:99px;background:rgba(255,255,255,.14);opacity:.5;transition:all .14s ease}
+.dial-steps span.on{background:var(--saffron);color:#3B2B03;opacity:1;transform:scale(1.08)}
+.dial-hint{font-size:.65rem;opacity:.7;margin-top:7px}
+
+.tgl-row{display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:8px}
+.tgl-row .btn{min-width:52px;min-height:44px;font-size:1.2rem}
+.tgl-now{flex:1;text-align:center}
+.tgl-now b{display:block;font-size:.95rem}
+.tgl-now span{font-size:.72rem;color:var(--ink-2)}
+
 /* ---------- gerak ---------- */
 html{scroll-behavior:smooth}
 main,.land{-webkit-overflow-scrolling:touch}
@@ -409,16 +439,16 @@ main,.land{-webkit-overflow-scrolling:touch}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script>
-const APP_VERSION = 'v3.0';
+const APP_VERSION = 'v3.1';
 /* ====== GANTI DATA PEMBAYARAN DI SINI ======
    qrisUrl : tautan gambar QRIS kamu (unggah ke repo GitHub, isi nama berkasnya, mis. 'qris.png').
              Kosongkan ('') kalau belum ada -> kotak QR tampil sebagai placeholder rapi. */
 const BAYAR = {
-  qrisUrl : 'qris.png',
-  bank    : 'Belum tersedia',
-  rekening: '12345Belum tersedia67890',
-  atasNama: 'Faris Shiddiq Al Rasuid',
-  wa      : '628132156548'
+  qrisUrl : '',
+  bank    : 'BCA',
+  rekening: '1234567890',
+  atasNama: 'Nama Pemilik',
+  wa      : '6281234567890'
 };   // naikkan tiap kali file diubah, supaya mudah cek versi mana yang live
 const SUPABASE_URL = 'https://mlowsqxwvpejpxewdwrh.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_221A2i1lT8Gxkt49RIhoRQ_3RsyZ_QS';
@@ -569,7 +599,8 @@ const ICON = {
   more:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
   play:'<path d="M8 5.5v13l11-6.5z"/>',
   qr:'<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><path d="M14 14h3v3h-3zM19.5 14v0M14 19.5h3M19.5 19.5v0"/>',
-  chat:'<path d="M20 15a3 3 0 0 1-3 3H9l-5 3V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3z"/>'
+  chat:'<path d="M20 15a3 3 0 0 1-3 3H9l-5 3V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3z"/>',
+  drag:'<path d="M12 3v18M8.5 6.5 12 3l3.5 3.5M8.5 17.5 12 21l3.5-3.5"/><path d="M3 12h18M6.5 8.5 3 12l3.5 3.5M17.5 8.5 21 12l-3.5 3.5" opacity=".45"/>'
 };
 const ic = (n, cls='') => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
 
@@ -1378,16 +1409,45 @@ function renderLayer(){
     return;
   }
   else if(name==='cepat'){
-    const kat = S.kat || (h.setting.kategori||[])[0] || 'Lain-lain';
+    const dft = S.draft || (S.draft = {nominal:0, kat:(h.setting.kategori||[])[0]||'Lain-lain', tgl:today(), catatan:''});
+    const kats = (h.setting.kategori||[]).slice(0,6);
+    const hariIni = dft.tgl === today();
     L.innerHTML = sheet('Catat belanja', `
-      <div class="money"><input id="q-nominal" type="number" inputmode="decimal" placeholder="0" aria-label="Nominal"><span>EGP</span></div>
-      <div class="slide mt-s" role="group" aria-label="Kategori">
-        ${(h.setting.kategori||[]).map(k=>`<button class="chip ${k===kat?'on':''}" data-a="pilih-kat" data-v="${esc(k)}">${esc(k)}</button>`).join('')}
+      <div class="dial-out">
+        <div class="tiny">Nominal</div>
+        <div class="dial-num" id="dial-num">${nf.format(dft.nominal)}<i>EGP</i></div>
+        <div class="row mt-s">
+          <button class="btn soft press nudge" data-a="nom" data-v="-10" aria-label="Kurangi 10">−10</button>
+          <button class="btn soft press nudge" data-a="nom" data-v="-50" aria-label="Kurangi 50">−50</button>
+          <span class="sp"></span>
+          <button class="btn soft press nudge" data-a="nom" data-v="50" aria-label="Tambah 50">+50</button>
+          <button class="btn soft press nudge" data-a="nom" data-v="10" aria-label="Tambah 10">+10</button>
+        </div>
+        <button class="hold-pad press" id="hold-pad" data-hold="1">
+          ${ic('drag')} Tahan & geser untuk atur nominal
+        </button>
       </div>
-      <label class="f mt-s"><span>Untuk apa</span><input id="q-deskripsi" placeholder="misal: beras 10 kg" autocomplete="off"></label>
-      <div id="err-q" class="err" hidden></div>
-      <button class="btn block" data-a="q-simpan">Simpan</button>
-      <button class="btn soft block mt-s" data-a="sheet" data-v="belanja-detail">Isi detail lengkap</button>`);
+
+      <div class="tiny mt">Kategori</div>
+      <div class="slide" role="group" aria-label="Kategori">
+        ${kats.map(k=>`<button class="chip ${k===dft.kat?'on':''} press" data-a="draft-kat" data-v="${esc(k)}">${esc(k)}</button>`).join('')}
+      </div>
+
+      <div class="tiny mt">Tanggal</div>
+      <div class="tgl-row">
+        <button class="btn soft press" data-a="tgl" data-v="-1" aria-label="Mundur sehari">−</button>
+        <div class="tgl-now"><b>${hariIni?'Hari ini':dLabel(dft.tgl)}</b>${hariIni?`<span>${dLabel(dft.tgl)}</span>`:''}</div>
+        <button class="btn soft press" data-a="tgl" data-v="1" aria-label="Maju sehari" ${hariIni?'disabled':''}>+</button>
+      </div>
+
+      ${dft.buka? `<label class="f mt"><span>Catatan <span class="hint">opsional</span></span>
+        <input id="q-catatan" value="${esc(dft.catatan)}" placeholder="misal: beras 10 kg"></label>`
+      : `<button class="btn ghost sm mt" data-a="draft-catatan">+ Tambah catatan</button>`}
+
+      <div id="err-q" class="err mt-s" hidden></div>
+      <button class="btn gold block mt press" data-a="q-simpan">${dft.nominal>0? `Simpan ${nf.format(dft.nominal)} EGP` : 'Simpan'}</button>`);
+    pasangHold(document.getElementById('hold-pad'));
+    return;
   }
   else if(name==='belanja-detail'){
     const e = id ? h.expenses.find(x=>x.id===id) : null;
@@ -1601,6 +1661,107 @@ const Bg3D = (()=>{
   return { start, stop, get hidup(){ return hidup; } };
 })();
 
+
+/* =====================================================================
+   HOLD & DIAL — atur nominal tanpa papan ketik.
+   Tahan tombol -> panel angka muncul di atas jari.
+   Geser NAIK/TURUN : ubah nominal.
+   Geser KIRI/KANAN : ganti kelipatan (5 / 10 / 50 / 100 EGP).
+   Lepas            : nominal terkunci.
+   ===================================================================== */
+const STEPS = [5, 10, 50, 100];
+let holdT = null, dial = null;
+
+function pasangHold(el){
+  if(!el) return;
+  el.style.touchAction = 'none';
+  el.addEventListener('pointerdown', (ev)=>{
+    ev.preventDefault();
+    const x0 = ev.clientX, y0 = ev.clientY;
+    const mulai = (S.draft && +S.draft.nominal) || 0;
+    try{ el.setPointerCapture(ev.pointerId); }catch(e){}
+
+    holdT = setTimeout(()=>{
+      holdT = null;
+      getar(12);
+      bukaDial(x0, y0, mulai);
+    }, 260);
+
+    const gerak = (e)=>{
+      if(holdT && (Math.abs(e.clientX-x0) > 12 || Math.abs(e.clientY-y0) > 12)){
+        clearTimeout(holdT); holdT = null; getar(12); bukaDial(x0, y0, mulai);
+      }
+      if(!dial) return;
+      e.preventDefault();
+      const dx = e.clientX - x0, dy = y0 - e.clientY;         // ke atas = positif
+      const iStep = Math.min(3, Math.floor(Math.abs(dx) / 55));
+      const step = STEPS[iStep];
+      let nilai = mulai + Math.round(dy / 9) * step;          // 9px = satu langkah
+      nilai = Math.max(0, Math.min(999999, nilai));
+      if(nilai !== dial.nilai){
+        if(Math.floor(nilai/ (step*10)) !== Math.floor(dial.nilai/(step*10))) getar(6);
+        dial.nilai = nilai;
+      }
+      dial.step = step;
+      gambarDial(e.clientX, e.clientY);
+    };
+    const lepas = (e)=>{
+      el.removeEventListener('pointermove', gerak);
+      el.removeEventListener('pointerup', lepas);
+      el.removeEventListener('pointercancel', lepas);
+      if(holdT){ clearTimeout(holdT); holdT = null; }
+      if(dial){
+        const n = dial.nilai;
+        tutupDial();
+        getar(18);
+        S.draft = S.draft || {};
+        S.draft.nominal = n;
+        renderLayer();
+      }
+    };
+    el.addEventListener('pointermove', gerak);
+    el.addEventListener('pointerup', lepas);
+    el.addEventListener('pointercancel', lepas);
+  });
+}
+
+function getar(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
+
+function bukaDial(x, y, mulai){
+  if(dial) return;
+  const d = document.createElement('div');
+  d.className = 'dial-wrap';
+  d.innerHTML = `<div class="dial-card" id="dial-card">
+      <div class="dial-big"><span id="dial-v">0</span><i>EGP</i></div>
+      <div class="dial-steps" id="dial-steps">
+        ${STEPS.map(v=>`<span data-s="${v}">${v}</span>`).join('')}
+      </div>
+      <div class="dial-hint">geser ↕ nominal · ↔ kelipatan</div>
+    </div>`;
+  document.body.appendChild(d);
+  document.body.classList.add('no-scroll');
+  dial = { el:d, nilai:mulai, step:STEPS[0] };
+  gambarDial(x, y);
+}
+function gambarDial(x, y){
+  if(!dial) return;
+  const card = dial.el.querySelector('.dial-card');
+  const w = card.offsetWidth || 190, h = card.offsetHeight || 120;
+  const left = Math.max(10, Math.min(window.innerWidth - w - 10, x - w/2));
+  const top  = Math.max(10, y - h - 34);
+  card.style.transform = `translate(${left}px, ${top}px)`;
+  dial.el.querySelector('#dial-v').textContent = nf.format(dial.nilai);
+  dial.el.querySelectorAll('#dial-steps span').forEach(sp=>{
+    sp.classList.toggle('on', +sp.dataset.s === dial.step);
+  });
+}
+function tutupDial(){
+  if(!dial) return;
+  dial.el.remove();
+  document.body.classList.remove('no-scroll');
+  dial = null;
+}
+
 /* =====================================================================
    ROUTER
    ===================================================================== */
@@ -1690,7 +1851,23 @@ function afterLogin(){
 /* Umpan balik tekan: tombol memantul balik sesudah dilepas.
    Ditaruh di listener terpisah supaya animasi jalan lebih dulu,
    tidak menunggu aksi datanya selesai. */
+// Tahan FAB di beranda -> langsung buka form cepat, siap di-geser.
 document.addEventListener('pointerdown', (ev)=>{
+  const f = ev.target.closest('.fab');
+  if(f){
+    let t = setTimeout(()=>{
+      t = null; getar(12);
+      const h0 = house();
+      S.sheet = {name:'cepat'};
+      S.draft = {nominal:0, kat:S.kat||(h0&&h0.setting.kategori||[])[0]||'Lain-lain', tgl:today(), catatan:''};
+      renderLayer();
+      const pad = document.getElementById('hold-pad');
+      if(pad) pad.classList.add('siap');
+    }, 300);
+    const batal = ()=>{ if(t){ clearTimeout(t); t=null; } f.removeEventListener('pointerup', batal); f.removeEventListener('pointerleave', batal); };
+    f.addEventListener('pointerup', batal);
+    f.addEventListener('pointerleave', batal);
+  }
   const b = ev.target.closest('.press, .fab, .btn, .chip, .paytap');
   if(!b) return;
   b.classList.remove('pushed');
@@ -1718,7 +1895,9 @@ document.addEventListener('click', async (ev)=>{
     case 'tab': openTab(v); return;
     case 'page': S.page=v; S.sheet=null; render(); return;
     case 'per': S.period = pShift(S.period||thisPeriod(), +v); render(); return;
-    case 'sheet': S.sheet={name:v, id:id||null}; if(v==='checkout') S.step=1; renderLayer(); return;
+    case 'sheet': S.sheet={name:v, id:id||null}; if(v==='checkout') S.step=1;
+      if(v==='cepat') S.draft={nominal:0, kat:S.kat||(h&&h.setting.kategori||[])[0]||'Lain-lain', tgl:today(), catatan:''};
+      renderLayer(); return;
     case 'rules-ok': S.rulesPopup=false; renderLayer(); return;
     case 'keluar': { stopRealtime(); await sb.auth.signOut(); DB={houses:{},session:{}}; go('landing'); return; }
 
@@ -1843,26 +2022,48 @@ document.addEventListener('click', async (ev)=>{
       catch(e){ toast('Nomor: ' + t); }
       return;
     }
+    case 'nom': {
+      S.draft = S.draft || {nominal:0, kat:(h.setting.kategori||[])[0]||'Lain-lain', tgl:today(), catatan:''};
+      S.draft.nominal = Math.max(0, (+S.draft.nominal||0) + (+v));
+      renderLayer(); return;
+    }
+    case 'draft-kat': S.draft = S.draft||{}; S.draft.kat = v; S.kat = v; renderLayer(); return;
+    case 'draft-catatan': S.draft = S.draft||{}; S.draft.buka = true; renderLayer(); return;
+    case 'tgl': {
+      S.draft = S.draft || {nominal:0, kat:(h.setting.kategori||[])[0]||'Lain-lain', tgl:today(), catatan:''};
+      const dt = new Date(S.draft.tgl + 'T12:00:00');
+      dt.setDate(dt.getDate() + (+v));
+      const baru = dt.toISOString().slice(0,10);
+      if(baru <= today()) S.draft.tgl = baru;         // tidak boleh ke masa depan
+      renderLayer(); return;
+    }
     case 'pilih-kat': S.kat = v; if(S.sheet) renderLayer(); else render(); return;
     case 'q-simpan': {
-      const p = S.period || thisPeriod();
-      if(locked(h,p)) return ferr('Buku periode ini ditutup.');
+      const dft = S.draft || {};
+      const tgl = dft.tgl || today();
+      if(locked(h, tgl.slice(0,7))) return ferr('Buku periode itu ditutup.');
       const me = getMe(); if(!me){ S.sheet={name:'aku'}; renderLayer(); return; }
-      const n = num('q-nominal'); if(n<=0) return ferr('Isi nominalnya dulu.');
-      const d = val('q-deskripsi'); if(!d) return ferr('Tulis belanjanya untuk apa.');
-      const kat = S.kat || (h.setting.kategori||[])[0] || 'Lain-lain';
+      // dari sheet cepat pakai draft; dari form di tab Belanja pakai kolom biasa
+      const dariSheet = S.sheet && S.sheet.name==='cepat';
+      const n = dariSheet ? (+dft.nominal||0) : num('q-nominal');
+      if(n<=0) return ferr('Atur nominalnya dulu — tahan tombol lalu geser.');
+      const kat = dariSheet ? (dft.kat || (h.setting.kategori||[])[0] || 'Lain-lain')
+                            : (S.kat || (h.setting.kategori||[])[0] || 'Lain-lain');
+      const catatan = dariSheet ? (val('q-catatan') || dft.catatan || '') : val('q-deskripsi');
+      const d = catatan.trim() || kat;                 // tanpa catatan? pakai nama kategori
       const ms = aktif(h).length;
       const tambahan = ms? Math.ceil(n/ms) : 0;
       quick(
-        ()=>{ h.expenses.push({id:'tmp-'+uidLite(), tanggal:today(), kategori:kat, deskripsi:d, nominal:n, besar:false, dicatatOleh:me, bukti:''});
-              const el1=document.getElementById('q-nominal'), el2=document.getElementById('q-deskripsi');
-              if(el1) el1.value=''; if(el2) el2.value=''; },
+        ()=>{ h.expenses.push({id:'tmp-'+uidLite(), tanggal:tgl, kategori:kat, deskripsi:d, nominal:n, besar:false, dicatatOleh:me, bukti:''});
+              if(dariSheet){ S.draft = {nominal:0, kat:kat, tgl:today(), catatan:''}; }
+              else { const e1=document.getElementById('q-nominal'), e2=document.getElementById('q-deskripsi');
+                     if(e1) e1.value=''; if(e2) e2.value=''; } },
         async()=>{
-          await insertRow('expenses', {house_id:h.id, tanggal:today(), kategori:kat, deskripsi:d, nominal:n, is_besar:false, dicatat_oleh:me});
+          await insertRow('expenses', {house_id:h.id, tanggal:tgl, kategori:kat, deskripsi:d, nominal:n, is_besar:false, dicatat_oleh:me});
           await catatLog(me, `Catat belanja ${d} ${nf.format(n)} EGP`, 'expenses');
         },
         ms? `${egp(n)} · ${kat} — tagihan/orang +${nf.format(tambahan)}` : `Tercatat ${egp(n)} · ${kat}`);
-      if(S.sheet && S.sheet.name==='cepat') closeSheet();
+      if(dariSheet) closeSheet();
       return;
     }
     case 'sv-belanja': {
