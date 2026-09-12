@@ -4,30 +4,31 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Igarin — Kas Rumah</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230D4F45'/%3E%3Cpath d='M14 40c6-3 10-9 14-16 3 6 6 10 10 12 4 2 8 1 12-3' stroke='%23E8A020' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='50' cy='20' r='5' fill='%23E8A020'/%3E%3C/svg%3E">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230D4F45'/%3E%3Cpath d='M14 40c6-3 10-9 14-16 3 6 6 10 10 12 4 2 8 1 12-3' stroke='%23E8A020' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
-<meta name="theme-color" content="#0D4F45">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230B4A40'/%3E%3Cpath d='M14 40c6-3 10-9 14-16 3 6 6 10 10 12 4 2 8 1 12-3' stroke='%23F0B429' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='50' cy='20' r='5' fill='%23F0B429'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B4A40'/%3E%3Cpath d='M14 40c6-3 10-9 14-16 3 6 6 10 10 12 4 2 8 1 12-3' stroke='%23F0B429' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#0B4A40">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:#F0EFE9;
+  --paper:#F5F0E3;
   --card:#FFFFFF;
   --ink:#15221F;
   --ink-2:#5F726D;
-  --line:#DFDDD3;
-  --nil:#0D4F45;
-  --nil-2:#14695C;
-  --nil-pale:#DCEBE6;
-  --saffron:#E8A020;
-  --saffron-pale:#FBEBCD;
-  --lunas:#1A7F52;
-  --lunas-pale:#DDF0E5;
-  --sebagian:#A86F06;
-  --belum:#B93A31;
-  --belum-pale:#FAE3E0;
-  --r:18px;
+  --line:#E5DFCB;
+  --nil:#0B4A40;
+  --nil-2:#12805F;
+  --nil-pale:#DCEEE7;
+  --saffron:#F0B429;
+  --saffron-pale:#FCEFD2;
+  --lunas:#1E8C57;
+  --lunas-pale:#DFF2E6;
+  --sebagian:#A8720A;
+  --belum:#BE4433;
+  --belum-pale:#FBE4DF;
+  --r:20px;
+  --gap:14px;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
@@ -46,49 +47,49 @@ button{font-family:inherit;cursor:pointer}
 .muted{color:var(--ink-2);font-size:.87rem}
 .tiny{color:var(--ink-2);font-size:.75rem}
 .sp{flex:1}
-.row{display:flex;gap:10px;align-items:center}
+.row{display:flex;gap:12px;align-items:center}
 .row.wrap{flex-wrap:wrap}
 .center{text-align:center}
-.mt{margin-top:16px}.mt-s{margin-top:8px}
+.mt{margin-top:18px}.mt-s{margin-top:10px}
 .hide{display:none !important}
 
 /* ---------- struktur ---------- */
-.shell{max-width:900px;margin:0 auto;padding:0 16px calc(104px + env(safe-area-inset-bottom))}
-.bar{position:sticky;top:0;z-index:30;background:var(--paper);padding:12px 16px 8px;max-width:900px;margin:0 auto;display:flex;align-items:center;gap:10px}
+.shell{max-width:900px;margin:0 auto;padding:14px 16px calc(132px + env(safe-area-inset-bottom))}
+.bar{position:sticky;top:0;z-index:30;background:var(--paper);padding:14px 16px 10px;max-width:900px;margin:0 auto;display:flex;align-items:center;gap:12px}
 .bar h2{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.grid{display:grid;gap:12px}
+.grid{display:grid;gap:var(--gap)}
 @media(min-width:760px){.grid.two{grid-template-columns:1fr 1fr}}
-.sec{display:flex;align-items:baseline;gap:10px;margin:24px 0 10px}
+.sec{display:flex;align-items:baseline;gap:10px;margin:30px 0 14px}
 .sec h2{flex:1;font-size:1.05rem}
 
 /* ---------- kartu ---------- */
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
-.card.pad-s{padding:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+.card.pad-s{padding:14px}
 .card.flat{background:transparent;border-style:dashed}
 
 /* ---------- kartu saldo (motif kuitansi) ---------- */
 .kas{
-  position:relative;overflow:hidden;border-radius:22px;padding:20px 18px 16px;color:#fff;
-  background:radial-gradient(130% 110% at 88% -10%, rgba(232,160,32,.34), transparent 60%),
+  position:relative;overflow:hidden;border-radius:26px;padding:24px 22px 20px;color:#fff;
+  background:radial-gradient(130% 110% at 88% -10%, rgba(240,180,41,.38), transparent 60%),
              linear-gradient(165deg,var(--nil-2),var(--nil) 74%);
 }
-.kas .lbl{font-size:.8rem;color:var(--nil-pale);letter-spacing:.02em}
-.kas .big{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:2.6rem;line-height:1.02;margin-top:2px}
-.kas .big i{font-style:normal;font-size:.95rem;font-weight:600;opacity:.7;margin-left:7px;font-family:"Plus Jakarta Sans",sans-serif}
-.kas .spark{position:absolute;right:0;bottom:0;width:54%;opacity:.45}
+.kas .lbl{font-size:.82rem;color:var(--nil-pale);letter-spacing:.02em;font-weight:600}
+.kas .big{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:2.75rem;line-height:1.02;margin-top:4px}
+.kas .big i{font-style:normal;font-size:.95rem;font-weight:600;opacity:.7;margin-left:8px;font-family:"Plus Jakarta Sans",sans-serif}
+.kas .spark{position:absolute;right:0;bottom:0;width:54%;opacity:.4}
 /* garis perforasi seperti sobekan kuitansi */
-.kas .perf{position:relative;margin:14px -18px 0;border-top:2px dashed rgba(255,255,255,.28)}
+.kas .perf{position:relative;margin:18px -22px 0;border-top:2px dashed rgba(255,255,255,.28)}
 .kas .perf::before,.kas .perf::after{content:"";position:absolute;top:-11px;width:20px;height:20px;border-radius:50%;background:var(--paper)}
 .kas .perf::before{left:-10px}
 .kas .perf::after{right:-10px}
-.kas .duo{display:flex;gap:18px;padding-top:12px;position:relative;z-index:2}
+.kas .duo{display:flex;gap:22px;padding-top:16px;position:relative;z-index:2}
 .kas .duo div{flex:1}
-.kas .duo b{display:block;font-family:"Bricolage Grotesque",sans-serif;font-size:1.15rem}
-.kas .duo span{font-size:.72rem;color:var(--nil-pale)}
+.kas .duo b{display:block;font-family:"Bricolage Grotesque",sans-serif;font-size:1.2rem}
+.kas .duo span{font-size:.74rem;color:var(--nil-pale)}
 
 /* ---------- tombol ---------- */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 18px;
-  border-radius:14px;border:1.5px solid var(--nil);background:var(--nil);color:#fff;font-weight:600;font-size:.95rem;
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 20px;
+  border-radius:15px;border:1.5px solid var(--nil);background:var(--nil);color:#fff;font-weight:600;font-size:.95rem;
   transition:transform .1s ease,filter .15s ease}
 .btn:active{transform:scale(.98)}
 .btn.soft{background:#fff;color:var(--ink);border-color:var(--line)}
@@ -102,19 +103,19 @@ button{font-family:inherit;cursor:pointer}
 .btn svg{width:18px;height:18px;flex:0 0 auto;stroke-width:2}
 
 /* ---------- chips geser ---------- */
-.slide{display:flex;gap:8px;overflow-x:auto;padding:3px 16px 5px;margin:0 -16px;scrollbar-width:none;scroll-snap-type:x proximity}
+.slide{display:flex;gap:10px;overflow-x:auto;padding:4px 16px 6px;margin:0 -16px;scrollbar-width:none;scroll-snap-type:x proximity}
 .slide::-webkit-scrollbar{display:none}
-.chip{flex:0 0 auto;min-height:44px;display:inline-flex;align-items:center;gap:7px;padding:0 15px;border-radius:99px;
+.chip{flex:0 0 auto;min-height:46px;display:inline-flex;align-items:center;gap:7px;padding:0 16px;border-radius:99px;
   border:1.5px solid var(--line);background:#fff;font-size:.88rem;font-weight:600;color:var(--ink);scroll-snap-align:start}
 .chip.on{background:var(--nil);color:#fff;border-color:var(--nil)}
 .chip.gold.on{background:var(--saffron);border-color:var(--saffron);color:#3B2B03}
 .chip svg{width:17px;height:17px;stroke-width:1.9}
 
 /* ---------- input ---------- */
-label.f{display:block;margin-bottom:14px}
-label.f>span{display:block;font-size:.82rem;font-weight:600;margin-bottom:6px}
+label.f{display:block;margin-bottom:16px}
+label.f>span{display:block;font-size:.82rem;font-weight:600;margin-bottom:7px}
 label.f .hint{font-weight:400;color:var(--ink-2)}
-input,select,textarea{width:100%;min-height:48px;padding:11px 13px;border:1.5px solid var(--line);border-radius:13px;
+input,select,textarea{width:100%;min-height:50px;padding:12px 14px;border:1.5px solid var(--line);border-radius:14px;
   background:#fff;font-family:inherit;font-size:1rem;color:var(--ink)}
 input:focus,select:focus,textarea:focus{border-color:var(--nil);outline:none}
 textarea{min-height:84px;resize:vertical}
@@ -127,8 +128,8 @@ input[type=checkbox]{width:24px;height:24px;min-height:24px;accent-color:var(--n
 
 /* ---------- daftar ---------- */
 .list{display:flex;flex-direction:column}
-.li{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);text-align:left;
-  background:none;border-left:0;border-right:0;border-top:0;width:100%;color:inherit;font:inherit;min-height:56px}
+.li{display:flex;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line);text-align:left;
+  background:none;border-left:0;border-right:0;border-top:0;width:100%;color:inherit;font:inherit;min-height:58px}
 .li:last-child{border-bottom:0}
 .li .bd{flex:1;min-width:0}
 .li .bd b{display:block;font-size:.95rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -146,10 +147,10 @@ input[type=checkbox]{width:24px;height:24px;min-height:24px;accent-color:var(--n
 .tag.plain{background:var(--paper);color:var(--ink-2);border:1px solid var(--line)}
 
 /* ---------- papan iuran ---------- */
-.pays{display:grid;grid-template-columns:1fr;gap:8px}
+.pays{display:grid;grid-template-columns:1fr;gap:12px}
 @media(min-width:600px){.pays{grid-template-columns:1fr 1fr}}
-.pay{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:15px;border:1.5px solid var(--line);
-  background:#fff;width:100%;text-align:left;min-height:66px}
+.pay{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:17px;border:1.5px solid var(--line);
+  background:#fff;width:100%;text-align:left;min-height:68px}
 .pay .bd{flex:1;min-width:0}
 .pay .bd b{display:block;font-size:.94rem;font-weight:600}
 .pay .bd span{font-size:.76rem;color:var(--ink-2)}
@@ -174,14 +175,21 @@ th{font-size:.72rem;color:var(--ink-2);font-weight:700}
 td.n,th.n{text-align:right}
 tr.tot td{font-weight:700;border-top:2px solid var(--ink);border-bottom:0}
 
-/* ---------- navigasi ---------- */
-.nav{position:fixed;left:0;right:0;bottom:0;z-index:40;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);
-  border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
-.nav-in{max-width:900px;margin:0 auto;display:flex}
-.nav button{flex:1;background:none;border:0;padding:6px 2px;color:var(--ink-2);display:flex;flex-direction:column;
-  align-items:center;gap:3px;font-size:.68rem;font-weight:600;min-height:54px;border-radius:12px}
-.nav button.on{color:var(--nil)}
-.nav svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+/* ---------- navigasi: pil melayang + tombol tengah timbul ---------- */
+.nav{position:fixed;left:14px;right:14px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:40;
+  max-width:472px;margin:0 auto;overflow:visible;
+  background:linear-gradient(165deg,var(--nil-2),var(--nil) 78%);
+  border-radius:28px;padding:6px 6px}
+.nav-in{position:relative;display:flex;align-items:center}
+.nav button{flex:1;background:none;border:0;padding:9px 2px 8px;color:rgba(255,255,255,.6);display:flex;flex-direction:column;
+  align-items:center;gap:4px;font-size:.66rem;font-weight:700;min-height:54px;border-radius:16px}
+.nav button.on{color:#fff;background:rgba(255,255,255,.14)}
+.nav svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav-slot{flex:1;min-height:54px}
+.nav .nav-fab{position:absolute;left:50%;top:-24px;transform:translateX(-50%);width:56px;height:56px;border-radius:50%;
+  border:0;background:linear-gradient(155deg,#F6C449,var(--saffron));color:#3B2B03;display:grid;place-items:center;
+  box-shadow:0 10px 22px -6px rgba(240,180,41,.85),0 2px 0 rgba(0,0,0,.05)}
+.nav .nav-fab svg{width:26px;height:26px;stroke-width:2.4}
 
 /* ---------- identitas pemakai ---------- */
 .me{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:0 12px;border-radius:99px;
@@ -191,11 +199,11 @@ tr.tot td{font-weight:700;border-top:2px solid var(--ink);border-bottom:0}
 /* ---------- sheet ---------- */
 .scrim{position:fixed;inset:0;background:rgba(21,34,31,.5);z-index:60;display:flex;align-items:flex-end;justify-content:center}
 @media(min-width:600px){.scrim{align-items:center}}
-.sheet{background:var(--paper);width:100%;max-width:520px;max-height:92dvh;overflow:auto;border-radius:24px 24px 0 0;
-  padding:8px 16px calc(20px + env(safe-area-inset-bottom))}
-@media(min-width:600px){.sheet{border-radius:24px;max-height:88dvh}}
-.grab{width:44px;height:5px;border-radius:99px;background:var(--line);margin:6px auto 2px}
-.sheet-hd{position:sticky;top:0;background:var(--paper);padding:10px 0 12px;display:flex;align-items:center;gap:10px;z-index:2}
+.sheet{background:var(--paper);width:100%;max-width:520px;max-height:92dvh;overflow:auto;border-radius:26px 26px 0 0;
+  padding:10px 18px calc(22px + env(safe-area-inset-bottom))}
+@media(min-width:600px){.sheet{border-radius:26px;max-height:88dvh}}
+.grab{width:44px;height:5px;border-radius:99px;background:var(--line);margin:8px auto 4px}
+.sheet-hd{position:sticky;top:0;background:var(--paper);padding:12px 0 14px;display:flex;align-items:center;gap:10px;z-index:2}
 .sheet-hd h2{flex:1}
 .x{background:none;border:0;font-size:1.5rem;line-height:1;color:var(--ink-2);min-width:44px;min-height:44px}
 
@@ -243,6 +251,33 @@ tr.tot td{font-weight:700;border-top:2px solid var(--ink);border-bottom:0}
 .legend div{display:flex;align-items:center;gap:8px;font-size:.8rem}
 .legend i{width:11px;height:11px;border-radius:4px;flex:0 0 auto}
 .legend .v{margin-left:auto;font-weight:700}
+
+/* ---------- bar proporsi & kartu kategori warna-warni ---------- */
+.kbar{display:flex;height:11px;border-radius:99px;overflow:hidden;gap:3px;background:var(--paper)}
+.kbar span{display:block;border-radius:99px}
+.kat-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.kstat{background:var(--kcp);border-radius:18px;padding:14px 15px;display:flex;flex-direction:column;gap:9px}
+.kstat-ic{width:32px;height:32px;border-radius:10px;background:var(--kc);color:#fff;display:grid;place-items:center;flex:0 0 auto}
+.kstat-ic svg{width:17px;height:17px}
+.kstat b{font-size:.8rem;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kstat span{font-size:.98rem;font-weight:800;font-family:"Bricolage Grotesque",sans-serif;color:var(--ink)}
+
+/* ---------- ubin pemilih kategori (pengganti chip tipis) ---------- */
+.kat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(94px,1fr));gap:10px;margin:14px 0}
+.ktile{position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:10px;
+  padding:14px 12px;border-radius:18px;border:0;background:var(--kcp);color:var(--ink);min-height:86px;text-align:left}
+.ktile-ic{width:34px;height:34px;border-radius:11px;background:var(--kc);color:#fff;display:grid;place-items:center;flex:0 0 auto}
+.ktile-ic svg{width:18px;height:18px}
+.ktile-lb{font-size:.82rem;font-weight:700;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.ktile.on{background:var(--kc);color:#fff;box-shadow:0 10px 20px -10px rgba(0,0,0,.4)}
+.ktile.on .ktile-ic{background:rgba(255,255,255,.24)}
+.ktile-ok{position:absolute;top:9px;right:9px;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.92);color:var(--nil);display:grid;place-items:center}
+.ktile-ok svg{width:11px;height:11px;stroke-width:3.4}
+
+/* ---------- chip nominal cepat (bantu isi tanpa mengetik) ---------- */
+.chip.amtc{background:var(--saffron-pale);color:var(--sebagian);border-color:transparent;font-weight:700}
+.chip.amtc:active{background:var(--saffron);color:#3B2B03}
+.chip.amtc.ghostc{background:transparent;border:1.5px dashed var(--line);color:var(--ink-2)}
 .rule{display:flex;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);font-size:.9rem}
 .rule:last-child{border-bottom:0}
 .rule .no{width:23px;height:23px;border-radius:8px;background:var(--saffron-pale);color:var(--sebagian);display:grid;
@@ -271,7 +306,9 @@ tr.tot td{font-weight:700;border-top:2px solid var(--ink);border-bottom:0}
 .land .card{box-shadow:var(--sh-2)}
 .kas{box-shadow:var(--sh-3)}
 .pay{box-shadow:var(--sh-1)}
-.nav{box-shadow:0 -2px 16px -6px rgba(13,79,69,.22)}
+.nav{box-shadow:0 16px 34px -12px rgba(11,74,64,.55), 0 4px 12px rgba(11,74,64,.25)}
+.nav .nav-fab{transition:transform .14s cubic-bezier(.3,.8,.4,1)}
+.nav .nav-fab:active{transform:translateX(-50%) scale(.92)}
 .sheet{box-shadow:0 -10px 50px -12px rgba(13,79,69,.5)}
 
 /* kartu miring halus saat disentuh/hover — kesan 3D */
@@ -309,7 +346,7 @@ tr.tot td{font-weight:700;border-top:2px solid var(--ink);border-bottom:0}
 
 /* CTA utama: besar, kontras, timbul */
 .cta-big{display:flex;align-items:center;gap:14px;width:100%;padding:20px 18px;border:0;border-radius:22px;
-  background:linear-gradient(150deg,#17695C,#0D4F45 76%);color:#fff;text-align:left;
+  background:linear-gradient(150deg,#12805F,#0B4A40 76%);color:#fff;text-align:left;
   box-shadow:0 6px 14px rgba(13,79,69,.28), 0 20px 40px -16px rgba(13,79,69,.75);position:relative;overflow:hidden}
 .cta-big::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 100% at 85% -20%,rgba(232,160,32,.35),transparent 60%)}
 .cta-ic{width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,.16);display:grid;place-items:center;flex:0 0 auto;position:relative;z-index:2}
@@ -331,7 +368,7 @@ tr.tot td{font-weight:700;border-top:2px solid var(--ink);border-bottom:0}
 .co{display:flex;flex-direction:column;gap:12px;padding-bottom:6px}
 .co-hd h2{font-size:1.35rem;margin-top:2px}
 .co-step{font-size:.72rem;font-weight:700;color:var(--saffron);letter-spacing:.06em;text-transform:uppercase}
-.co-price{background:linear-gradient(150deg,#17695C,#0D4F45);color:#fff;border-radius:18px;padding:16px;box-shadow:var(--sh-2)}
+.co-price{background:linear-gradient(150deg,#12805F,#0B4A40);color:#fff;border-radius:18px;padding:16px;box-shadow:var(--sh-2)}
 .co-price b{display:block;font-family:"Bricolage Grotesque",sans-serif;font-size:2rem;line-height:1}
 .co-price span{font-size:.8rem;opacity:.82}
 .co-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
@@ -355,36 +392,6 @@ tr.tot td{font-weight:700;border-top:2px solid var(--ink);border-bottom:0}
   .qr-box{max-height:30dvh;max-width:210px}
   .co-list li{font-size:.84rem}
 }
-
-/* ---------- hold & dial ---------- */
-.no-scroll{overflow:hidden;touch-action:none}
-.dial-out{background:#fff;border:1.5px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--sh-1)}
-.dial-num{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:2.6rem;line-height:1.05;margin-top:2px}
-.dial-num i{font-style:normal;font-size:.95rem;font-weight:600;color:var(--ink-2);margin-left:8px;font-family:"Plus Jakarta Sans",sans-serif}
-.nudge{min-width:58px;font-variant-numeric:tabular-nums}
-.hold-pad{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:56px;margin-top:12px;
-  border:2px dashed var(--nil);border-radius:16px;background:var(--nil-pale);color:var(--nil);
-  font-weight:700;font-size:.9rem;touch-action:none;user-select:none;-webkit-user-select:none}
-.hold-pad svg{width:19px;height:19px;stroke-width:2}
-.hold-pad:active,.hold-pad.siap{background:var(--nil);color:#fff;border-style:solid}
-.hold-pad:active svg,.hold-pad.siap svg{stroke:#fff}
-
-.dial-wrap{position:fixed;inset:0;z-index:90;background:rgba(21,34,31,.22);animation:scrimIn .12s ease both;touch-action:none}
-.dial-card{position:absolute;top:0;left:0;min-width:186px;padding:14px 18px;border-radius:20px;
-  background:linear-gradient(160deg,#17695C,#0D4F45);color:#fff;text-align:center;
-  box-shadow:0 12px 34px -10px rgba(13,79,69,.85);animation:popIn .14s ease both;will-change:transform}
-.dial-big{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:2.3rem;line-height:1}
-.dial-big i{font-style:normal;font-size:.85rem;font-weight:600;opacity:.75;margin-left:6px;font-family:"Plus Jakarta Sans",sans-serif}
-.dial-steps{display:flex;gap:5px;justify-content:center;margin-top:9px}
-.dial-steps span{font-size:.7rem;font-weight:700;padding:4px 8px;border-radius:99px;background:rgba(255,255,255,.14);opacity:.5;transition:all .14s ease}
-.dial-steps span.on{background:var(--saffron);color:#3B2B03;opacity:1;transform:scale(1.08)}
-.dial-hint{font-size:.65rem;opacity:.7;margin-top:7px}
-
-.tgl-row{display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:8px}
-.tgl-row .btn{min-width:52px;min-height:44px;font-size:1.2rem}
-.tgl-now{flex:1;text-align:center}
-.tgl-now b{display:block;font-size:.95rem}
-.tgl-now span{font-size:.72rem;color:var(--ink-2)}
 
 /* ---------- gerak ---------- */
 html{scroll-behavior:smooth}
@@ -439,16 +446,16 @@ main,.land{-webkit-overflow-scrolling:touch}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script>
-const APP_VERSION = 'v3.1';
+const APP_VERSION = 'v3.0';
 /* ====== GANTI DATA PEMBAYARAN DI SINI ======
    qrisUrl : tautan gambar QRIS kamu (unggah ke repo GitHub, isi nama berkasnya, mis. 'qris.png').
              Kosongkan ('') kalau belum ada -> kotak QR tampil sebagai placeholder rapi. */
 const BAYAR = {
   qrisUrl : '',
-  bank    : 'BCA',
-  rekening: '1234567890',
-  atasNama: 'Nama Pemilik',
-  wa      : '6281234567890'
+  bank    : 'Belum tersedia',
+  rekening: 'Belum tersedia',
+  atasNama: 'Faris Shiddiq Al Rasuid',
+  wa      : '628132156548'
 };   // naikkan tiap kali file diubah, supaya mudah cek versi mana yang live
 const SUPABASE_URL = 'https://mlowsqxwvpejpxewdwrh.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_221A2i1lT8Gxkt49RIhoRQ_3RsyZ_QS';
@@ -600,7 +607,13 @@ const ICON = {
   play:'<path d="M8 5.5v13l11-6.5z"/>',
   qr:'<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><path d="M14 14h3v3h-3zM19.5 14v0M14 19.5h3M19.5 19.5v0"/>',
   chat:'<path d="M20 15a3 3 0 0 1-3 3H9l-5 3V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3z"/>',
-  drag:'<path d="M12 3v18M8.5 6.5 12 3l3.5 3.5M8.5 17.5 12 21l3.5-3.5"/><path d="M3 12h18M6.5 8.5 3 12l3.5 3.5M17.5 8.5 21 12l-3.5 3.5" opacity=".45"/>'
+  bag:'<path d="M6 8h12l-1 12a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>',
+  bolt:'<path d="M13 3 5 14h6l-1 7 8-11h-6z"/>',
+  drop:'<path d="M12 3c4 4.6 7 8.3 7 12a7 7 0 1 1-14 0c0-3.7 3-7.4 7-12z"/>',
+  flame:'<path d="M12 21c4 0 6.2-2.6 6.2-5.9 0-2.8-1.7-4.4-2.5-6C15 8 14.5 6 14.5 3.6 11.6 5.5 9.6 8.8 9.6 11.7c-1-1-1.6-2.2-1.8-3.2C6.4 9.9 5.8 11.9 5.8 13.8 5.8 17.7 8.6 21 12 21z"/>',
+  wifi:'<path d="M4 9c4.8-4.2 11.2-4.2 16 0M6.8 12.6c3-2.5 7.4-2.5 10.4 0M9.8 16.1c1.2-1 3.2-1 4.4 0"/><circle cx="12" cy="19.2" r="1"/>',
+  trash:'<path d="M5 7h14M9.5 7V5.2a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1V7M7.5 7l.9 12.2a1 1 0 0 0 1 .8h5.2a1 1 0 0 0 1-.8L16.5 7"/>',
+  key:'<circle cx="7.5" cy="16.5" r="3.5"/><path d="M10.5 13.5 19 5M15 9l2.5 2.5M12.3 11.7l2 2"/>'
 };
 const ic = (n, cls='') => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
 
@@ -675,20 +688,77 @@ function lastPeriods(n){
 }
 function locked(h, period){ return (h.closed||[]).includes(period); }
 
+/* ---------- palet warna kategori bernuansa Mesir ----------
+   Tiap kategori dapat warna tetap (dihitung dari nama, bukan urutan) supaya
+   ubin warna-warni, donat, dan lencana kecil selalu konsisten satu sama lain. */
+const KAT_PALETTE = [
+  {solid:'#1E7F82', pale:'#DCEEEC'},   // pirus/faience
+  {solid:'#2B5FA5', pale:'#DCE6F5'},   // biru lapis
+  {solid:'#C1592B', pale:'#F7E1D3'},   // terracotta/carnelian
+  {solid:'#B98A3D', pale:'#F3E6CC'},   // emas papirus
+  {solid:'#1F8A54', pale:'#DCF0E2'},   // malachite
+  {solid:'#7A4FA0', pale:'#EAE1F2'},   // ametis
+  {solid:'#9C3450', pale:'#F5DCE1'},   // garnet
+  {solid:'#0B4A40', pale:'#DCEEE7'}    // nil hijau (warna utama)
+];
+function katColor(kat){
+  const s = String(kat||''); let hash = 0;
+  for(let i=0;i<s.length;i++) hash = (hash*31 + s.charCodeAt(i)) >>> 0;
+  return KAT_PALETTE[hash % KAT_PALETTE.length];
+}
+function katIconName(kat){
+  const s = String(kat||'').toLowerCase();
+  if(/dapur|makan|groceries|belanja|masak/.test(s)) return 'bag';
+  if(/listrik|kahraba|electric/.test(s)) return 'bolt';
+  if(/^air$|water/.test(s)) return 'drop';
+  if(/gas/.test(s)) return 'flame';
+  if(/internet|wifi|data/.test(s)) return 'wifi';
+  if(/bersih|sampah|cleaning/.test(s)) return 'trash';
+  if(/sewa|ijar|rent|kontrak/.test(s)) return 'key';
+  return 'receipt';
+}
+/* Bar proporsi berwarna-warni, seperti pita segmen pada layar "Spend analysis". */
+function katBar(data){
+  const total = data.reduce((a,b)=>a+b.v,0) || 1;
+  return `<div class="kbar" role="img" aria-label="Proporsi belanja per kategori">
+    ${data.map(d=>`<span style="width:${Math.max(3,d.v/total*100).toFixed(2)}%;background:${katColor(d.k).solid}" title="${esc(d.k)}"></span>`).join('')}
+  </div>`;
+}
+/* Kartu kategori dua-kolom warna-warni — versi "Quick actions" untuk data belanja nyata. */
+function katGrid(data){
+  return `<div class="kat-stat-grid">${data.slice(0,6).map(d=>{
+    const c = katColor(d.k);
+    return `<div class="kstat" style="--kc:${c.solid};--kcp:${c.pale}">
+      <span class="kstat-ic">${ic(katIconName(d.k))}</span>
+      <b>${esc(d.k)}</b><span>${egp(d.v)}</span></div>`;
+  }).join('')}</div>`;
+}
+/* Ubin pemilih kategori warna-warni, pengganti chip tipis — target ketuk lebih besar,
+   langsung menunjukkan warna yang sama dipakai di grafik supaya konsisten. */
+function katTiles(list, sel){
+  return `<div class="kat-grid" role="group" aria-label="Pilih kategori">${(list||[]).map(k=>{
+    const c = katColor(k), on = k===sel;
+    return `<button type="button" class="ktile ${on?'on':''}" data-a="pilih-kat" data-v="${esc(k)}" style="--kc:${c.solid};--kcp:${c.pale}" aria-pressed="${on}">
+      <span class="ktile-ic">${ic(katIconName(k))}</span><span class="ktile-lb">${esc(k)}</span>
+      ${on? `<span class="ktile-ok">${ic('check')}</span>` : ''}
+    </button>`;
+  }).join('')}</div>`;
+}
+
 /* ---------- grafik (SVG tangan sendiri) ---------- */
-const PIE_COLORS = ['#0E4A46','#E09B13','#1C8A57','#8A5FBF','#C2443B','#2C7DA0','#B47708','#56736D','#4E9A6B','#9A4E78'];
 function donut(data){
   const total = data.reduce((a,b)=>a+b.v, 0);
   if(!total) return `<div class="empty">Belum ada pengeluaran pada periode ini.</div>`;
   const R=54, C=2*Math.PI*R; let off=0;
-  const arcs = data.map((d,i)=>{
+  const arcs = data.map((d)=>{
+    const col = katColor(d.k).solid;
     const len = C*(d.v/total);
-    const s = `<circle cx="70" cy="70" r="${R}" fill="none" stroke="${PIE_COLORS[i%10]}" stroke-width="22"
+    const s = `<circle cx="70" cy="70" r="${R}" fill="none" stroke="${col}" stroke-width="22"
       stroke-dasharray="${len.toFixed(2)} ${(C-len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}"
       transform="rotate(-90 70 70)"><title>${esc(d.k)}: ${egp(d.v)}</title></circle>`;
     off += len; return s;
   }).join('');
-  const legend = data.map((d,i)=>`<div><i style="background:${PIE_COLORS[i%10]}"></i>${esc(d.k)}
+  const legend = data.map((d)=>`<div><i style="background:${katColor(d.k).solid}"></i>${esc(d.k)}
     <span class="v">${Math.round(d.v/total*100)}% · ${egp(d.v)}</span></div>`).join('');
   return `<div class="row" style="align-items:center;gap:14px;flex-wrap:wrap">
     <svg viewBox="0 0 140 140" style="width:140px;height:140px;flex:0 0 auto" role="img" aria-label="Proporsi pengeluaran per kategori">
@@ -733,6 +803,16 @@ function sparkline(rows){
     <polygon points="${pts} 100,44 0,44" fill="rgba(255,255,255,.16)"/>
     <polyline points="${pts}" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="1.6"/></svg>`;
 }
+/* Chip nominal cepat: ketuk untuk menambah ke kolom nominal terdekat —
+   supaya jarang perlu mengetik angka penuh dari nol (mirip kalkulator cepat). */
+function amtChips(){
+  const presets = [20,50,100,200,500,1000];
+  return `<div class="slide amt-chips" role="group" aria-label="Tambah nominal cepat">
+    ${presets.map(v=>`<button type="button" class="chip amtc" data-a="tambah-nominal" data-v="${v}">+${nf.format(v)}</button>`).join('')}
+    <button type="button" class="chip amtc ghostc" data-a="reset-nominal">Reset</button>
+  </div>`;
+}
+
 /* =====================================================================
    IDENTITAS PEMAKAI
    Akun dipakai bersama, jadi tiap HP menyimpan "aku siapa" satu kali.
@@ -798,16 +878,16 @@ function artGrowth(){
     <svg viewBox="0 0 320 180" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="gBar" x1="0" y1="1" x2="0" y2="0">
-          <stop offset="0%" stop-color="#0D4F45"/><stop offset="100%" stop-color="#1C8A72"/>
+          <stop offset="0%" stop-color="#0B4A40"/><stop offset="100%" stop-color="#1C8A72"/>
         </linearGradient>
         <linearGradient id="gGlow" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#E8A020" stop-opacity=".35"/><stop offset="100%" stop-color="#E8A020" stop-opacity="0"/>
+          <stop offset="0%" stop-color="#F0B429" stop-opacity=".35"/><stop offset="100%" stop-color="#F0B429" stop-opacity="0"/>
         </linearGradient>
         <filter id="fSh" x="-30%" y="-30%" width="160%" height="180%">
-          <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#0D4F45" flood-opacity=".22"/>
+          <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#0B4A40" flood-opacity=".22"/>
         </filter>
       </defs>
-      <ellipse cx="160" cy="168" rx="120" ry="10" fill="#0D4F45" opacity=".08"/>
+      <ellipse cx="160" cy="168" rx="120" ry="10" fill="#0B4A40" opacity=".08"/>
       <rect x="18" y="30" width="284" height="120" rx="18" fill="url(#gGlow)"/>
       <g filter="url(#fSh)">
         <rect x="42"  y="104" width="34" height="46" rx="9" fill="url(#gBar)" class="bar b1"/>
@@ -816,14 +896,14 @@ function artGrowth(){
         <rect x="180" y="42"  width="34" height="108" rx="9" fill="url(#gBar)" class="bar b4"/>
       </g>
       <g class="coin">
-        <circle cx="248" cy="58" r="26" fill="#E8A020" filter="url(#fSh)"/>
+        <circle cx="248" cy="58" r="26" fill="#F0B429" filter="url(#fSh)"/>
         <circle cx="248" cy="58" r="18" fill="none" stroke="#8A5E06" stroke-width="2.5" opacity=".55"/>
         <text x="248" y="66" text-anchor="middle" font-family="Bricolage Grotesque,sans-serif"
               font-size="19" font-weight="800" fill="#4A3203">E</text>
       </g>
       <path class="trend" d="M50 116 L105 96 L151 74 L197 52 L236 40"
-            fill="none" stroke="#E8A020" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-      <circle class="dot" cx="236" cy="40" r="5.5" fill="#fff" stroke="#E8A020" stroke-width="3.5"/>
+            fill="none" stroke="#F0B429" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle class="dot" cx="236" cy="40" r="5.5" fill="#fff" stroke="#F0B429" stroke-width="3.5"/>
     </svg>
   </div>`;
 }
@@ -892,15 +972,19 @@ function vSiapa(){
    ===================================================================== */
 function chrome(inner, judul){
   const h = house();
-  const tabs = [['beranda','Beranda','home'],['tagihan','Iuran','users'],['belanja','Belanja','receipt'],
-                ['lainnya','Lainnya','gear']];
+  const kiri = [['beranda','Beranda','home'],['tagihan','Iuran','users']];
+  const kanan = [['belanja','Belanja','receipt'],['lainnya','Lainnya','gear']];
+  const tab = t => `<button class="${S.tab===t[0]?'on':''}" data-a="tab" data-v="${t[0]}" aria-current="${S.tab===t[0]}">${ic(t[2])}${t[1]}</button>`;
   return `<header class="bar">
       <h2>${esc(judul || h.nama)}</h2>
       <button class="me" data-a="ganti-aku"><i></i>${esc(getMe()||'pilih nama')}</button>
     </header>
     <main class="shell">${inner}</main>
     <nav class="nav" aria-label="Navigasi utama"><div class="nav-in">
-      ${tabs.map(t=>`<button class="${S.tab===t[0]?'on':''}" data-a="tab" data-v="${t[0]}" aria-current="${S.tab===t[0]}">${ic(t[2])}${t[1]}</button>`).join('')}
+      ${kiri.map(tab).join('')}
+      <span class="nav-slot" aria-hidden="true"></span>
+      ${kanan.map(tab).join('')}
+      <button class="nav-fab press" data-a="sheet" data-v="cepat" aria-label="Catat belanja baru">${ic('plus')}</button>
     </div></nav>`;
 }
 
@@ -947,7 +1031,7 @@ function vBeranda(){
     </div>`}
 
     ${donutData.length? `<div class="sec"><h2>Belanja ${pShort(p)}</h2><span class="muted">${egp(keluar(h,p))}</span></div>
-    <div class="card">${donut(donutData)}</div>`:''}
+    <div class="card">${katBar(donutData)}${katGrid(donutData)}</div>`:''}
 
     <div class="sec"><h2>Catatan terakhir</h2>
       ${recent.length? `<button class="btn ghost xs" data-a="tab" data-v="belanja">Semua ›</button>`:''}</div>
@@ -958,9 +1042,7 @@ function vBeranda(){
       || '<div class="empty">Belum ada catatan. Mulai dari tombol Catat belanja.</div>'}</div></div>
 
     ${rules.length? `<div class="sec"><h2>Peraturan rumah</h2></div>
-    <div class="card"><div class="scrollbox">${rules.map((r,i)=>`<div class="rule"><span class="no">${i+1}</span><div>${esc(r.teks)}</div></div>`).join('')}</div></div>`:''}
-
-    <button class="fab" data-a="sheet" data-v="cepat" aria-label="Catat belanja baru">${ic('plus')}</button>`;
+    <div class="card"><div class="scrollbox">${rules.map((r,i)=>`<div class="rule"><span class="no">${i+1}</span><div>${esc(r.teks)}</div></div>`).join('')}</div></div>`:''}`;
 }
 
 /* ---------- TAGIHAN: anggota + status iuran jadi satu layar ---------- */
@@ -1043,12 +1125,11 @@ function vBelanja(){
   return `<div class="belanja">${lock? `<div class="card flat"><b>Buku ${pLabel(p)} ditutup</b><p class="tiny" style="margin:4px 0 0">Buka kembali dari Lainnya → Laporan untuk mengoreksi.</p></div>`
     : `<div class="card">
       <div class="money"><input id="q-nominal" type="number" inputmode="decimal" placeholder="0" aria-label="Nominal belanja"><span>EGP</span></div>
-      <div class="slide mt-s" role="group" aria-label="Kategori">
-        ${(h.setting.kategori||[]).map(k=>`<button class="chip ${k===kat?'on':''}" data-a="pilih-kat" data-v="${esc(k)}">${esc(k)}</button>`).join('')}
-        <button class="chip" data-a="page" data-v="kategori">+ Kategori</button>
-      </div>
-      <label class="f mt-s"><span class="hide">Untuk apa</span>
-        <input id="q-deskripsi" placeholder="Untuk apa? misal: beras 10 kg" autocomplete="off"></label>
+      ${amtChips()}
+      ${katTiles(h.setting.kategori||[], kat)}
+      <button class="chip" data-a="page" data-v="kategori" style="margin:-4px 0 12px">+ Kategori baru</button>
+      <label class="f"><span>Untuk apa <span class="hint">opsional — default nama kategori</span></span>
+        <input id="q-deskripsi" placeholder="misal: beras 10 kg" autocomplete="off"></label>
       <div id="err-q" class="err" hidden></div>
       <div class="row">
         <button class="btn sp" data-a="q-simpan">Simpan belanja</button>
@@ -1120,7 +1201,8 @@ function vLaporan(){
         <tr class="tot"><td>Saldo akhir</td><td class="n">${nf.format(akhir)}</td></tr>
       </tbody></table></div>
       <div class="sec"><h2>Per kategori</h2></div>
-      <div class="scroll-x"><table><thead><tr><th>Kategori</th><th class="n">Nominal</th><th class="n">Porsi</th></tr></thead>
+      ${rows.length? `<div class="card pad-s flat" style="border-style:solid">${donut(rows.map(([k,v])=>({k,v})))}</div>`:''}
+      <div class="scroll-x mt-s"><table><thead><tr><th>Kategori</th><th class="n">Nominal</th><th class="n">Porsi</th></tr></thead>
         <tbody>${rows.map(([k,v])=>`<tr><td>${esc(k)}</td><td class="n">${nf.format(v)}</td><td class="n">${out?Math.round(v/out*100):0}%</td></tr>`).join('')
           || '<tr><td colspan="3">Tidak ada belanja.</td></tr>'}</tbody></table></div>
       <div class="sec"><h2>Iuran per anggota</h2></div>
@@ -1409,52 +1491,23 @@ function renderLayer(){
     return;
   }
   else if(name==='cepat'){
-    const dft = S.draft || (S.draft = {nominal:0, kat:(h.setting.kategori||[])[0]||'Lain-lain', tgl:today(), catatan:''});
-    const kats = (h.setting.kategori||[]).slice(0,6);
-    const hariIni = dft.tgl === today();
+    const kat = S.kat || (h.setting.kategori||[])[0] || 'Lain-lain';
     L.innerHTML = sheet('Catat belanja', `
-      <div class="dial-out">
-        <div class="tiny">Nominal</div>
-        <div class="dial-num" id="dial-num">${nf.format(dft.nominal)}<i>EGP</i></div>
-        <div class="row mt-s">
-          <button class="btn soft press nudge" data-a="nom" data-v="-10" aria-label="Kurangi 10">−10</button>
-          <button class="btn soft press nudge" data-a="nom" data-v="-50" aria-label="Kurangi 50">−50</button>
-          <span class="sp"></span>
-          <button class="btn soft press nudge" data-a="nom" data-v="50" aria-label="Tambah 50">+50</button>
-          <button class="btn soft press nudge" data-a="nom" data-v="10" aria-label="Tambah 10">+10</button>
-        </div>
-        <button class="hold-pad press" id="hold-pad" data-hold="1">
-          ${ic('drag')} Tahan & geser untuk atur nominal
-        </button>
-      </div>
-
-      <div class="tiny mt">Kategori</div>
-      <div class="slide" role="group" aria-label="Kategori">
-        ${kats.map(k=>`<button class="chip ${k===dft.kat?'on':''} press" data-a="draft-kat" data-v="${esc(k)}">${esc(k)}</button>`).join('')}
-      </div>
-
-      <div class="tiny mt">Tanggal</div>
-      <div class="tgl-row">
-        <button class="btn soft press" data-a="tgl" data-v="-1" aria-label="Mundur sehari">−</button>
-        <div class="tgl-now"><b>${hariIni?'Hari ini':dLabel(dft.tgl)}</b>${hariIni?`<span>${dLabel(dft.tgl)}</span>`:''}</div>
-        <button class="btn soft press" data-a="tgl" data-v="1" aria-label="Maju sehari" ${hariIni?'disabled':''}>+</button>
-      </div>
-
-      ${dft.buka? `<label class="f mt"><span>Catatan <span class="hint">opsional</span></span>
-        <input id="q-catatan" value="${esc(dft.catatan)}" placeholder="misal: beras 10 kg"></label>`
-      : `<button class="btn ghost sm mt" data-a="draft-catatan">+ Tambah catatan</button>`}
-
-      <div id="err-q" class="err mt-s" hidden></div>
-      <button class="btn gold block mt press" data-a="q-simpan">${dft.nominal>0? `Simpan ${nf.format(dft.nominal)} EGP` : 'Simpan'}</button>`);
-    pasangHold(document.getElementById('hold-pad'));
-    return;
+      <div class="money"><input id="q-nominal" type="number" inputmode="decimal" placeholder="0" aria-label="Nominal"><span>EGP</span></div>
+      ${amtChips()}
+      ${katTiles(h.setting.kategori||[], kat)}
+      <label class="f"><span>Untuk apa <span class="hint">opsional — default nama kategori</span></span>
+        <input id="q-deskripsi" placeholder="misal: beras 10 kg" autocomplete="off"></label>
+      <div id="err-q" class="err" hidden></div>
+      <button class="btn block" data-a="q-simpan">Simpan</button>
+      <button class="btn soft block mt-s" data-a="sheet" data-v="belanja-detail">Isi detail lengkap</button>`);
   }
   else if(name==='belanja-detail'){
     const e = id ? h.expenses.find(x=>x.id===id) : null;
     L.innerHTML = sheet(e?'Ubah belanja':'Belanja dengan detail', `
       <label class="f"><span>Tanggal</span><input id="tanggal" type="date" value="${e?e.tanggal:today()}"></label>
       ${katSelect(e? e.kategori : S.kat)}
-      <label class="f"><span>Untuk apa</span><input id="deskripsi" value="${e?esc(e.deskripsi):''}" placeholder="Beras 10 kg"></label>
+      <label class="f"><span>Untuk apa <span class="hint">opsional</span></span><input id="deskripsi" value="${e?esc(e.deskripsi):''}" placeholder="Beras 10 kg"></label>
       <label class="f"><span>Nominal</span><div class="money"><input id="nominal" type="number" inputmode="decimal" value="${e?e.nominal:''}"><span>EGP</span></div></label>
       <label class="check"><input type="checkbox" id="besar" ${e&&e.besar?'checked':''}> Belanja besar / tidak rutin</label>
       <label class="f"><span>Link bukti <span class="hint">opsional</span></span><input id="bukti" value="${e?esc(e.bukti||''):''}"></label>
@@ -1591,12 +1644,12 @@ const Bg3D = (()=>{
 
     scene.add(new THREE.AmbientLight(0xffffff, .72));
     const key = new THREE.DirectionalLight(0xffffff, .95); key.position.set(4,7,9); scene.add(key);
-    const rim = new THREE.DirectionalLight(0xE8A020, .55); rim.position.set(-6,-3,4); scene.add(rim);
+    const rim = new THREE.DirectionalLight(0xF0B429, .55); rim.position.set(-6,-3,4); scene.add(rim);
 
     const geoKoin  = new THREE.CylinderGeometry(1, 1, .17, 30);
     const geoKartu = new THREE.BoxGeometry(2.3, 1.5, .12);
-    const emas = new THREE.MeshPhongMaterial({color:0xE8A020, shininess:70, specular:0x5a3d05});
-    const hijau= new THREE.MeshPhongMaterial({color:0x0D4F45, shininess:45, specular:0x123f38});
+    const emas = new THREE.MeshPhongMaterial({color:0xF0B429, shininess:70, specular:0x5a3d05});
+    const hijau= new THREE.MeshPhongMaterial({color:0x0B4A40, shininess:45, specular:0x123f38});
     const krem = new THREE.MeshPhongMaterial({color:0xDCEBE6, shininess:30});
 
     const resep = [
@@ -1660,107 +1713,6 @@ const Bg3D = (()=>{
   }
   return { start, stop, get hidup(){ return hidup; } };
 })();
-
-
-/* =====================================================================
-   HOLD & DIAL — atur nominal tanpa papan ketik.
-   Tahan tombol -> panel angka muncul di atas jari.
-   Geser NAIK/TURUN : ubah nominal.
-   Geser KIRI/KANAN : ganti kelipatan (5 / 10 / 50 / 100 EGP).
-   Lepas            : nominal terkunci.
-   ===================================================================== */
-const STEPS = [5, 10, 50, 100];
-let holdT = null, dial = null;
-
-function pasangHold(el){
-  if(!el) return;
-  el.style.touchAction = 'none';
-  el.addEventListener('pointerdown', (ev)=>{
-    ev.preventDefault();
-    const x0 = ev.clientX, y0 = ev.clientY;
-    const mulai = (S.draft && +S.draft.nominal) || 0;
-    try{ el.setPointerCapture(ev.pointerId); }catch(e){}
-
-    holdT = setTimeout(()=>{
-      holdT = null;
-      getar(12);
-      bukaDial(x0, y0, mulai);
-    }, 260);
-
-    const gerak = (e)=>{
-      if(holdT && (Math.abs(e.clientX-x0) > 12 || Math.abs(e.clientY-y0) > 12)){
-        clearTimeout(holdT); holdT = null; getar(12); bukaDial(x0, y0, mulai);
-      }
-      if(!dial) return;
-      e.preventDefault();
-      const dx = e.clientX - x0, dy = y0 - e.clientY;         // ke atas = positif
-      const iStep = Math.min(3, Math.floor(Math.abs(dx) / 55));
-      const step = STEPS[iStep];
-      let nilai = mulai + Math.round(dy / 9) * step;          // 9px = satu langkah
-      nilai = Math.max(0, Math.min(999999, nilai));
-      if(nilai !== dial.nilai){
-        if(Math.floor(nilai/ (step*10)) !== Math.floor(dial.nilai/(step*10))) getar(6);
-        dial.nilai = nilai;
-      }
-      dial.step = step;
-      gambarDial(e.clientX, e.clientY);
-    };
-    const lepas = (e)=>{
-      el.removeEventListener('pointermove', gerak);
-      el.removeEventListener('pointerup', lepas);
-      el.removeEventListener('pointercancel', lepas);
-      if(holdT){ clearTimeout(holdT); holdT = null; }
-      if(dial){
-        const n = dial.nilai;
-        tutupDial();
-        getar(18);
-        S.draft = S.draft || {};
-        S.draft.nominal = n;
-        renderLayer();
-      }
-    };
-    el.addEventListener('pointermove', gerak);
-    el.addEventListener('pointerup', lepas);
-    el.addEventListener('pointercancel', lepas);
-  });
-}
-
-function getar(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
-
-function bukaDial(x, y, mulai){
-  if(dial) return;
-  const d = document.createElement('div');
-  d.className = 'dial-wrap';
-  d.innerHTML = `<div class="dial-card" id="dial-card">
-      <div class="dial-big"><span id="dial-v">0</span><i>EGP</i></div>
-      <div class="dial-steps" id="dial-steps">
-        ${STEPS.map(v=>`<span data-s="${v}">${v}</span>`).join('')}
-      </div>
-      <div class="dial-hint">geser ↕ nominal · ↔ kelipatan</div>
-    </div>`;
-  document.body.appendChild(d);
-  document.body.classList.add('no-scroll');
-  dial = { el:d, nilai:mulai, step:STEPS[0] };
-  gambarDial(x, y);
-}
-function gambarDial(x, y){
-  if(!dial) return;
-  const card = dial.el.querySelector('.dial-card');
-  const w = card.offsetWidth || 190, h = card.offsetHeight || 120;
-  const left = Math.max(10, Math.min(window.innerWidth - w - 10, x - w/2));
-  const top  = Math.max(10, y - h - 34);
-  card.style.transform = `translate(${left}px, ${top}px)`;
-  dial.el.querySelector('#dial-v').textContent = nf.format(dial.nilai);
-  dial.el.querySelectorAll('#dial-steps span').forEach(sp=>{
-    sp.classList.toggle('on', +sp.dataset.s === dial.step);
-  });
-}
-function tutupDial(){
-  if(!dial) return;
-  dial.el.remove();
-  document.body.classList.remove('no-scroll');
-  dial = null;
-}
 
 /* =====================================================================
    ROUTER
@@ -1851,23 +1803,7 @@ function afterLogin(){
 /* Umpan balik tekan: tombol memantul balik sesudah dilepas.
    Ditaruh di listener terpisah supaya animasi jalan lebih dulu,
    tidak menunggu aksi datanya selesai. */
-// Tahan FAB di beranda -> langsung buka form cepat, siap di-geser.
 document.addEventListener('pointerdown', (ev)=>{
-  const f = ev.target.closest('.fab');
-  if(f){
-    let t = setTimeout(()=>{
-      t = null; getar(12);
-      const h0 = house();
-      S.sheet = {name:'cepat'};
-      S.draft = {nominal:0, kat:S.kat||(h0&&h0.setting.kategori||[])[0]||'Lain-lain', tgl:today(), catatan:''};
-      renderLayer();
-      const pad = document.getElementById('hold-pad');
-      if(pad) pad.classList.add('siap');
-    }, 300);
-    const batal = ()=>{ if(t){ clearTimeout(t); t=null; } f.removeEventListener('pointerup', batal); f.removeEventListener('pointerleave', batal); };
-    f.addEventListener('pointerup', batal);
-    f.addEventListener('pointerleave', batal);
-  }
   const b = ev.target.closest('.press, .fab, .btn, .chip, .paytap');
   if(!b) return;
   b.classList.remove('pushed');
@@ -1895,9 +1831,7 @@ document.addEventListener('click', async (ev)=>{
     case 'tab': openTab(v); return;
     case 'page': S.page=v; S.sheet=null; render(); return;
     case 'per': S.period = pShift(S.period||thisPeriod(), +v); render(); return;
-    case 'sheet': S.sheet={name:v, id:id||null}; if(v==='checkout') S.step=1;
-      if(v==='cepat') S.draft={nominal:0, kat:S.kat||(h&&h.setting.kategori||[])[0]||'Lain-lain', tgl:today(), catatan:''};
-      renderLayer(); return;
+    case 'sheet': S.sheet={name:v, id:id||null}; if(v==='checkout') S.step=1; renderLayer(); return;
     case 'rules-ok': S.rulesPopup=false; renderLayer(); return;
     case 'keluar': { stopRealtime(); await sb.auth.signOut(); DB={houses:{},session:{}}; go('landing'); return; }
 
@@ -2022,56 +1956,54 @@ document.addEventListener('click', async (ev)=>{
       catch(e){ toast('Nomor: ' + t); }
       return;
     }
-    case 'nom': {
-      S.draft = S.draft || {nominal:0, kat:(h.setting.kategori||[])[0]||'Lain-lain', tgl:today(), catatan:''};
-      S.draft.nominal = Math.max(0, (+S.draft.nominal||0) + (+v));
-      renderLayer(); return;
+    case 'pilih-kat': {
+      const keepN = val('q-nominal'), keepD = val('q-deskripsi');
+      S.kat = v;
+      if(S.sheet) renderLayer(); else render();
+      const n2 = document.getElementById('q-nominal'), d2 = document.getElementById('q-deskripsi');
+      if(n2 && keepN) n2.value = keepN;
+      if(d2 && keepD) d2.value = keepD;
+      return;
     }
-    case 'draft-kat': S.draft = S.draft||{}; S.draft.kat = v; S.kat = v; renderLayer(); return;
-    case 'draft-catatan': S.draft = S.draft||{}; S.draft.buka = true; renderLayer(); return;
-    case 'tgl': {
-      S.draft = S.draft || {nominal:0, kat:(h.setting.kategori||[])[0]||'Lain-lain', tgl:today(), catatan:''};
-      const dt = new Date(S.draft.tgl + 'T12:00:00');
-      dt.setDate(dt.getDate() + (+v));
-      const baru = dt.toISOString().slice(0,10);
-      if(baru <= today()) S.draft.tgl = baru;         // tidak boleh ke masa depan
-      renderLayer(); return;
+    case 'tambah-nominal': {
+      const scope = el.closest('.card, .sheet') || document;
+      const inp = scope.querySelector('#q-nominal') || scope.querySelector('#nominal');
+      if(inp){ inp.value = (parseFloat(inp.value)||0) + (+v); inp.focus({preventScroll:true}); }
+      return;
     }
-    case 'pilih-kat': S.kat = v; if(S.sheet) renderLayer(); else render(); return;
+    case 'reset-nominal': {
+      const scope = el.closest('.card, .sheet') || document;
+      const inp = scope.querySelector('#q-nominal') || scope.querySelector('#nominal');
+      if(inp){ inp.value=''; inp.focus({preventScroll:true}); }
+      return;
+    }
     case 'q-simpan': {
-      const dft = S.draft || {};
-      const tgl = dft.tgl || today();
-      if(locked(h, tgl.slice(0,7))) return ferr('Buku periode itu ditutup.');
+      const p = S.period || thisPeriod();
+      if(locked(h,p)) return ferr('Buku periode ini ditutup.');
       const me = getMe(); if(!me){ S.sheet={name:'aku'}; renderLayer(); return; }
-      // dari sheet cepat pakai draft; dari form di tab Belanja pakai kolom biasa
-      const dariSheet = S.sheet && S.sheet.name==='cepat';
-      const n = dariSheet ? (+dft.nominal||0) : num('q-nominal');
-      if(n<=0) return ferr('Atur nominalnya dulu — tahan tombol lalu geser.');
-      const kat = dariSheet ? (dft.kat || (h.setting.kategori||[])[0] || 'Lain-lain')
-                            : (S.kat || (h.setting.kategori||[])[0] || 'Lain-lain');
-      const catatan = dariSheet ? (val('q-catatan') || dft.catatan || '') : val('q-deskripsi');
-      const d = catatan.trim() || kat;                 // tanpa catatan? pakai nama kategori
+      const n = num('q-nominal'); if(n<=0) return ferr('Isi nominalnya dulu.');
+      const kat = S.kat || (h.setting.kategori||[])[0] || 'Lain-lain';
+      const d = val('q-deskripsi') || kat;
       const ms = aktif(h).length;
       const tambahan = ms? Math.ceil(n/ms) : 0;
       quick(
-        ()=>{ h.expenses.push({id:'tmp-'+uidLite(), tanggal:tgl, kategori:kat, deskripsi:d, nominal:n, besar:false, dicatatOleh:me, bukti:''});
-              if(dariSheet){ S.draft = {nominal:0, kat:kat, tgl:today(), catatan:''}; }
-              else { const e1=document.getElementById('q-nominal'), e2=document.getElementById('q-deskripsi');
-                     if(e1) e1.value=''; if(e2) e2.value=''; } },
+        ()=>{ h.expenses.push({id:'tmp-'+uidLite(), tanggal:today(), kategori:kat, deskripsi:d, nominal:n, besar:false, dicatatOleh:me, bukti:''});
+              const el1=document.getElementById('q-nominal'), el2=document.getElementById('q-deskripsi');
+              if(el1) el1.value=''; if(el2) el2.value=''; },
         async()=>{
-          await insertRow('expenses', {house_id:h.id, tanggal:tgl, kategori:kat, deskripsi:d, nominal:n, is_besar:false, dicatat_oleh:me});
+          await insertRow('expenses', {house_id:h.id, tanggal:today(), kategori:kat, deskripsi:d, nominal:n, is_besar:false, dicatat_oleh:me});
           await catatLog(me, `Catat belanja ${d} ${nf.format(n)} EGP`, 'expenses');
         },
         ms? `${egp(n)} · ${kat} — tagihan/orang +${nf.format(tambahan)}` : `Tercatat ${egp(n)} · ${kat}`);
-      if(dariSheet) closeSheet();
+      if(S.sheet && S.sheet.name==='cepat') closeSheet();
       return;
     }
     case 'sv-belanja': {
       const tgl = val('tanggal')||today();
       if(locked(h, tgl.slice(0,7))) return ferr('Buku periode itu ditutup.');
       const me = getMe(); if(!me) return ferr('Pilih dulu nama kamu di pojok atas.');
-      const d = val('deskripsi'); if(!d) return ferr('Tulis belanjanya untuk apa.');
       const n = num('nominal'); if(n<=0) return ferr('Nominal harus lebih dari 0.');
+      const d = val('deskripsi') || val('kategori') || 'Belanja';
       const data = {tanggal:tgl, kategori:val('kategori'), deskripsi:d, nominal:n, is_besar:chk('besar'), dicatat_oleh:me, bukti_foto_url:val('bukti')||null};
       const ok = await doAction(async()=>{
         if(id){ await updateRow('expenses', id, data); await catatLog(me, `Ubah belanja ${d}`, 'expenses'); }
