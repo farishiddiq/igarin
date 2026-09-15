@@ -505,7 +505,8 @@ tr.tot td{font-weight:800;border-bottom:0}
 .tx,.mrow,.occ-who{border-radius:14px}
 .tx:active,.mrow:active,.occ-who:active{background-color:rgba(15,59,46,.05)}
 .card.list .tx:focus{outline:none}
-.card.list .tx:focus-visible{outline:none;background-color:rgba(15,59,46,.06)}
+.card.list .tx:focus-visible{outline:none}
+.card.list .tx,.card.list .tx:hover,.card.list .tx:active,.card.list .tx:focus-visible{background-color:transparent!important}
 .cta:active span{transform:translateX(4px)}
 .nav>button.on svg{transform:translateY(-2px)}
 /* switch sudah/belum bayar: knob meluncur, warna mengikuti */
@@ -774,7 +775,10 @@ async function catatLog(nama, aksi, tabel){
   const h = house(); if(!h) return;
   try{ await insertRow('activity_log', {house_id:h.id, member_nama:nama||'—', aksi, tabel_terkait:tabel}); }catch(e){}
 }
+let tagihanLama = null;   // tagihan tiap anggota sebelum perubahan terakhir (untuk data lunas tanpa tanda 'penuh')
 async function doAction(fn){
+  const hb = house(), p = thisPeriod();
+  tagihanLama = hb ? new Map(aktif(hb).map(m=>[m.id, {bill:tagihanOf(hb, m), paid:paidOf(hb, m.id, p)}])) : null;
   try{ await fn(); bumpCalc(); await reloadHouse(); return true; }
   catch(e){ ferr(e && e.message ? e.message : 'Gagal menyimpan, coba lagi.'); return false; }
 }
@@ -1003,14 +1007,20 @@ async function sesuaikanLunas(){
   const ubah = [];
   for(const m of aktif(h)){
     const recs = h.payments.filter(x=>x.memberId===m.id && x.period===p);
-    const penuh = recs.filter(x=>x.penuh).sort(byNewest);
+    let penuh = recs.filter(x=>x.penuh).sort(byNewest);
+    /* data lama tanpa tanda 'penuh': dianggap lunas kalau sebelum perubahan jumlah bayarnya sudah menutup tagihan lama */
+    if(!penuh.length && recs.length){
+      const lama = tagihanLama && tagihanLama.get(m.id);
+      if(lama && lama.bill > 0 && lama.paid >= lama.bill - 0.005) penuh = recs.slice().sort(byNewest);
+    }
     if(!penuh.length) continue;
     const diff = r2(tagihanOf(h, m) - recs.reduce((a,x)=>a+x.nominal, 0));
     if(Math.abs(diff) < 0.01) continue;
     ubah.push({m, r:penuh[0], baru:r2(penuh[0].nominal + diff), diff});
   }
+  tagihanLama = null;
   for(const u of ubah){
-    if(u.baru > 0) await updateRow('payments', u.r.id, {nominal:u.baru});
+    if(u.baru > 0) await updateRow('payments', u.r.id, {nominal:u.baru, status_bayar:'penuh'});
     else await deleteRow('payments', u.r.id);
   }
   if(ubah.length) await catatLog(getMe()||'—', 'Iuran lunas disesuaikan ke tagihan baru: '+ubah.map(u=>`${u.m.nama} ${u.diff>0?'+':''}${nf.format(u.diff)}`).join(', '), 'payments');
@@ -1760,7 +1770,8 @@ function infoTotal(igarRaw, items, n){
 }
 function tfInfo(){ const f = S.tform; return infoTotal(f.igar, f.items, aktif(house()).length); }
 /* ---------- pengaturan awal: wajib diisi saat rumah belum punya anggota / igar ---------- */
-const needsSetup = h => !!h && h.hasProfil && (!h.tarif.siap || !aktif(h).length);
+/* hanya rumah yang benar-benar baru (belum ada igar & belum ada anggota sama sekali); rumah lama & contoh tidak dapat popup */
+const needsSetup = h => !!h && !DEMO && h.hasProfil && !h.tarif.siap && !h.members.length;
 function openSetup(){
   const h = house();
   S.setup = { igar: h.tarif.siap ? h.tarif.igar : '', items: h.tarif.perlengkapan.map(x=>({...x})),
